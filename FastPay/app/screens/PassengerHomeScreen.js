@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Dimensions, TouchableOpacity, StatusBar, Text, Button, TextInput } from "react-native";
+import { View, StyleSheet, TouchableOpacity, StatusBar, TextInput } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SQLite from "expo-sqlite";
@@ -9,7 +9,6 @@ import AppIcon from "../components/Icon";
 import AppText from "../components/Text";
 import HeaderCard from "../components/HeaderCard";
 import colors from "../config/colors";
-import PassengerNavigationMenu from "../components/PassengerNavigationMenu";
 import db_queries from "../constants/db_queries";
 import { fetchData } from "../functions/db_functions";
 import { toFarsiNumber, trimMoney } from "../functions/helperFunctions";
@@ -27,24 +26,17 @@ const PassengerHomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     const onRefresh = navigation.addListener("focus", () => {
-      //console.log("Refreshed!");
       readDataAsync(AsyncStorage, storage_keys.PHONE_NUMBER).then((response) => {
-        //console.log(response);
         const grabData = async () => {
           const data2 = await fetchData(db, db_queries.GET_WALLET_CHARGE_BY_PHONE_NUMBER, [response]);
           setWalletCharge(data2[0].passenger_walletCharge);
           if (response !== null) setUserPhoneNumber(response);
-          //console.log(userPhoneNumber);
         };
         grabData().catch(console.error);
       });
     });
     return onRefresh;
   }, [navigation]);
-
-  const activeAlert = () => {
-    setShowAlert(true);
-  };
 
   const hideAlert = () => {
     setShowAlert(false);

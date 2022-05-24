@@ -24,6 +24,7 @@ import db_queries from "./app/constants/db_queries";
 import { createOrDropTable, manipulateData } from "./app/functions/db_functions";
 import storage_keys from "./app/constants/storage_keys";
 import { readData } from "./app/functions/storage_functions";
+import FilterTransactionScreen from "./app/screens/FilterTransactionScreen";
 
 const Stack = createNativeStackNavigator();
 const db = SQLite.openDatabase("db.database"); // returns Database object
@@ -74,6 +75,11 @@ export default function App() {
             <Stack.Screen options={{ headerShown: false }} name="BarCodeScan" component={BarCodeScanScreen} />
             <Stack.Screen options={{ headerShown: false }} name="WalletCharge" component={WalletChargeScreen} />
             <Stack.Screen options={{ headerShown: false }} name="Payment" component={PaymentScreen} />
+            <Stack.Screen
+              options={{ headerShown: false }}
+              name="FilterTransaction"
+              component={FilterTransactionScreen}
+            />
             {signedup === "False" ? (
               <Stack.Screen options={{ headerShown: false }} name="Tabs" component={Tabs} />
             ) : null}
@@ -106,8 +112,5 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: "#fff",
-    // alignItems: "center",
-    // justifyContent: "center",
   },
 });

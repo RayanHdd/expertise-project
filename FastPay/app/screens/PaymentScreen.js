@@ -1,40 +1,21 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  StatusBar,
-  Text,
-  Button,
-  TextInput,
-  Image,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, StatusBar, TextInput, Image } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
-
 import AppButton from "../components/Button";
 import AppIcon from "../components/Icon";
 import AppText from "../components/Text";
 import HeaderCard from "../components/HeaderCard";
 import colors from "../config/colors";
-import PassengerNavigationMenu from "../components/PassengerNavigationMenu";
-import TransactionCard from "../components/TransactionCard";
 import * as SQLite from "expo-sqlite";
 import db_queries from "../constants/db_queries";
 import { fetchData, manipulateData } from "../functions/db_functions";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import { toFarsiNumber, trimMoney, toEnglishNumber } from "../functions/helperFunctions";
-import storage_keys from "../constants/storage_keys";
-import { readDataAsync } from "../functions/storage_functions";
-import AwesomeAlert from "react-native-awesome-alerts";
+import { toFarsiNumber, toEnglishNumber } from "../functions/helperFunctions";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
 const TOOMAN = "  تومان";
 
 const PaymentScreen = ({ navigation, route }) => {
   const { acceptor_code, wallet_charge, passenger_phone } = route.params;
-  const [driverInfo, setDriverInfo] = useState([]);
   const [car, setCar] = useState("");
   const [first, setfirst] = useState("");
   const [last, setLast] = useState("");
@@ -95,14 +76,6 @@ const PaymentScreen = ({ navigation, route }) => {
               style={{ position: "relative", marginRight: wp("80%"), marginTop: wp("5%") }}
             />
           </TouchableOpacity>
-
-          {/* <AppIcon
-            family="Ionicons"
-            name="arrow-back"
-            color={colors.darkBlue}
-            size={wp("7%")}
-            style={{ left: wp("5%") }}
-          /> */}
         </View>
 
         <View style={{ flex: 0.04 }} />
@@ -132,12 +105,7 @@ const PaymentScreen = ({ navigation, route }) => {
         <View style={styles.card}>
           <View style={{ width: "90%", height: "95%", backgroundColor: colors.light, borderRadius: wp("1.5%") }}>
             <AppText text="نام راننده" size={wp("3%")} style={{ right: wp("5%"), top: wp("3%") }} />
-            <AppText
-              // text={`${driverInfo[0].driver_firstName} ${driverInfo[0].driver_lastName}`}
-              text={`${first} ${last}`}
-              size={wp("3%")}
-              style={{ left: wp("5%"), top: wp("3%") }}
-            />
+            <AppText text={`${first} ${last}`} size={wp("3%")} style={{ left: wp("5%"), top: wp("3%") }} />
             <View
               style={{
                 borderBottomColor: colors.darkBlue,
@@ -149,12 +117,7 @@ const PaymentScreen = ({ navigation, route }) => {
               }}
             />
             <AppText text="خودرو" size={wp("3%")} style={{ right: wp("5%"), top: wp("12%") }} />
-            <AppText
-              // text={`${driverInfo[0].driver_carModel}`}
-              text={`${car}`}
-              size={wp("3%")}
-              style={{ left: wp("5%"), top: wp("12%") }}
-            />
+            <AppText text={`${car}`} size={wp("3%")} style={{ left: wp("5%"), top: wp("12%") }} />
             <View
               style={{
                 borderBottomColor: colors.darkBlue,
@@ -186,8 +149,6 @@ const PaymentScreen = ({ navigation, route }) => {
               height="80%"
               color="secondary"
               style={{
-                // position: "absolute",
-                // left: wp("10%"),
                 borderTopLeftRadius: wp("2%"),
                 borderBottomLeftRadius: wp("2%"),
               }}
@@ -215,8 +176,6 @@ const PaymentScreen = ({ navigation, route }) => {
               width={wp("10%")}
               height="80%"
               style={{
-                // position: "absolute",
-                // left: wp("10%"),
                 borderBottomRightRadius: wp("2%"),
                 borderTopRightRadius: wp("2%"),
               }}
@@ -267,7 +226,6 @@ const PaymentScreen = ({ navigation, route }) => {
             onKeyPress={({ nativeEvent: { key: keyValue } }) => {
               console.log(keyValue);
               if (keyValue === "Backspace") {
-                // setValue("۰");
                 setTripCost(tripCost.slice(0, tripCost.length - 1));
               }
             }}
@@ -275,7 +233,6 @@ const PaymentScreen = ({ navigation, route }) => {
               if (tripCost !== "۰") setTripCost(tripCost + toFarsiNumber(money));
               else setTripCost(toFarsiNumber(money));
             }}
-            // placeholder="مبلغ کرایه را به تومان وارد کنید"
             style={{
               width: "60%",
               height: "80%",
@@ -299,13 +256,7 @@ const PaymentScreen = ({ navigation, route }) => {
             }}
             style={styles.cancelBtn}
           >
-            <AppButton
-              width="30%"
-              height="100%"
-              color="secondary"
-              borderRadius={wp("3%")}
-              // style={{ left: wp("15%"), position: "absolute" }}
-            />
+            <AppButton width="30%" height="100%" color="secondary" borderRadius={wp("3%")} />
             <AppText text="انصراف" size={wp("3.8%")} color={colors.darkBlue} style={{ right: wp("14%") }} />
             <AppIcon
               family="MaterialIcons"
@@ -319,7 +270,6 @@ const PaymentScreen = ({ navigation, route }) => {
 
           <TouchableOpacity
             onPress={() => {
-              // navigation.navigate("PassengerHome");
               if (parseInt(wallet_charge) < parseInt(toEnglishNumber(count)) * parseInt(toEnglishNumber(tripCost))) {
                 toast.show("موجودی کیف پول ناکافی است", {
                   type: "normal",
@@ -336,8 +286,8 @@ const PaymentScreen = ({ navigation, route }) => {
                   "پرداخت کرایه با موفقیت انجام شد",
                   "خطا در پرداخت کرایه"
                 );
-                // const date = new Date();
                 manipulateData(db, db_queries.INSERT_TRANSACTION, [
+                  "trip",
                   parseInt(toEnglishNumber(count)) * parseInt(toEnglishNumber(tripCost)),
                   date,
                   "میدان معلم",
@@ -350,12 +300,7 @@ const PaymentScreen = ({ navigation, route }) => {
             }}
             style={styles.payBtn}
           >
-            <AppButton
-              width="30%"
-              height="100%"
-              borderRadius={wp("3%")}
-              // style={{ right: wp("15%"), position: "absolute" }}
-            />
+            <AppButton width="30%" height="100%" borderRadius={wp("3%")} />
             <AppText text="پرداخت" size={wp("3.8%")} color={colors.darkBlue} style={{ left: wp("5%") }} />
             <AppIcon
               family="SimpleLineIcons"
@@ -375,11 +320,9 @@ const PaymentScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   cancelBtn: {
     flex: 1,
-    // flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     width: "30%",
-    // marginBottom: wp("3.2%"),
     borderRadius: wp("3%"),
     backgroundColor: colors.secondary,
     left: wp("12%"),
@@ -391,11 +334,9 @@ const styles = StyleSheet.create({
   },
   payBtn: {
     flex: 1,
-    // flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     width: "30%",
-    // marginBottom: wp("3.2%"),
     borderRadius: wp("3%"),
     backgroundColor: colors.primary,
     shadowColor: colors.darkBlue,

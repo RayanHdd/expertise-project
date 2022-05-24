@@ -15,10 +15,11 @@ export default {
   FETCH_DRIVER_INFO_BY_CODE: "SELECT * FROM driver_table WHERE driver_acceptorCode = ?",
   DROP_DRIVER_TABLE: "DROP TABLE IF EXISTS driver_table",
   CREATE_TRANSACTION_TABLE:
-    "CREATE TABLE IF NOT EXISTS transaction_table(transaction_id INTEGER PRIMARY KEY AUTOINCREMENT, transaction_cost NVARCHAR(50) NOT NULL, transaction_dateTime VARCHAR(50) NOT NULL, transaction_source NVARCHAR(50), transaction_destination NVARCHAR(50), passenger_id INTEGER, driver_id INTEGER, FOREIGN KEY (passenger_id) REFERENCES passenger_table (passenger_id) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (driver_id) REFERENCES driver_table (driver_id) ON DELETE CASCADE ON UPDATE CASCADE)",
+    "CREATE TABLE IF NOT EXISTS transaction_table(transaction_id INTEGER PRIMARY KEY AUTOINCREMENT, transaction_type VARCHAR(20) NOT NULL ,transaction_cost NVARCHAR(50) NOT NULL, transaction_dateTime VARCHAR(50) NOT NULL, transaction_source NVARCHAR(50), transaction_destination NVARCHAR(50), passenger_id INTEGER, driver_id INTEGER, FOREIGN KEY (passenger_id) REFERENCES passenger_table (passenger_id) ON DELETE CASCADE ON UPDATE CASCADE, FOREIGN KEY (driver_id) REFERENCES driver_table (driver_id) ON DELETE CASCADE ON UPDATE CASCADE)",
   INSERT_TRANSACTION:
-    "INSERT INTO transaction_table (transaction_cost, transaction_dateTime, transaction_source, transaction_destination, passenger_id, driver_id) VALUES (?,?,?,?,?,?)",
+    "INSERT INTO transaction_table (transaction_type, transaction_cost, transaction_dateTime, transaction_source, transaction_destination, passenger_id, driver_id) VALUES (?,?,?,?,?,?,?)",
   GET_PASSENGER_ID_BY_PHONE_NUMBER: "SELECT passenger_id FROM passenger_table WHERE passenger_phone = ?",
   FETCH_TRANSACTIONS_BY_PASSENGER_ID: "SELECT * FROM transaction_table WHERE passenger_id = ?",
   DROP_TRANSACTION_TABLE: "DROP TABLE IF EXISTS transaction_table",
+  GET_DRIVER_NAME_BY_ID: "SELECT driver_firstName,driver_lastName FROM driver_table WHERE driver_id = ?",
 };

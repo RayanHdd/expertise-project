@@ -6,7 +6,19 @@ import colors from "../config/colors";
 import AppIcon from "./Icon";
 import AppText from "./Text";
 
-function TransactionCard({ width, height, borderRadius, title, date, time, price, type, iconType, iconUrl, style }) {
+function TransactionCard({
+  width,
+  height,
+  borderRadius,
+  title,
+  date,
+  time,
+  price,
+  type,
+  iconType,
+  iconUrl = null,
+  style,
+}) {
   return (
     <View
       style={[
@@ -43,6 +55,7 @@ function TransactionCard({ width, height, borderRadius, title, date, time, price
 const styles = StyleSheet.create({
   card: {
     justifyContent: "center",
+    margin: wp("2%"),
   },
 });
 
