@@ -24,6 +24,7 @@ const PaymentScreen = ({ navigation, route }) => {
   const [tripCost, setTripCost] = useState("۰");
   const [count, setCount] = useState("۱");
   const [date, setDate] = useState(null);
+  const [driverImage, setDriverImage] = useState(null);
 
   useEffect(() => {
     const grabData = async () => {
@@ -36,6 +37,7 @@ const PaymentScreen = ({ navigation, route }) => {
       setLast(data[0].driver_lastName);
       setDriverId(data[0].driver_id);
       setPassengerId(data2[0].passenger_id);
+      setDriverImage(data[0].driver_imageUrl);
 
       const today = new Date();
       const date =
@@ -83,7 +85,10 @@ const PaymentScreen = ({ navigation, route }) => {
         <View style={styles.image}>
           <Image
             style={{ width: wp("20%"), height: wp("20%"), borderRadius: wp("15%") }}
-            source={require("../assets/images/profile.jpeg")}
+            // source={require("../assets/images/driver_123456.jpeg")}
+            source={{
+              uri: driverImage,
+            }}
           />
           <View
             style={{

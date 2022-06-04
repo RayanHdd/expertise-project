@@ -272,6 +272,7 @@ const FilterTransactionScreen = ({ navigation }) => {
               width: 0,
               height: 2,
             },
+            elevation: wp("2%"),
           }}
         >
           <AppButton width="30%" height="20%" color="secondary" borderRadius={wp("3%")} />
@@ -302,6 +303,7 @@ const FilterTransactionScreen = ({ navigation }) => {
             borderRadius: wp("3%"),
             backgroundColor: colors.primary,
             shadowColor: colors.darkBlue,
+            elevation: wp("2%"),
             right: wp("25%"),
           }}
         >

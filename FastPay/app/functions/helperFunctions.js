@@ -41,6 +41,15 @@ export const trimMoney = (number) => {
   return number.slice(0, len % 3) + arr.join("٬");
 };
 
+export const trimDatetime = (number) => {
+  let len = number.length;
+  if (len >= 2) {
+    return number;
+  }
+
+  return "۰" + number;
+};
+
 export const gregorian_to_jalali = (gy, gm, gd) => {
   g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
   if (gy > 1600) {

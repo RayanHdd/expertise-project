@@ -12,7 +12,7 @@ import colors from "../config/colors";
 import PassengerNavigationMenu from "../components/PassengerNavigationMenu";
 import TransactionCard from "../components/TransactionCard";
 import db_queries from "../constants/db_queries";
-import { manipulateData } from "../functions/db_functions";
+import { manipulateData, fetchData } from "../functions/db_functions";
 import { toFarsiNumber, toEnglishNumber } from "../functions/helperFunctions";
 import storage_keys from "../constants/storage_keys";
 import { readData } from "../functions/storage_functions";
@@ -24,11 +24,30 @@ const WalletChargeScreen = ({ navigation, route }) => {
   const [value, setValue] = useState("۰");
   const [userPhoneNumber, setUserPhoneNumber] = useState(null);
   const { currentWalletCharge } = route.params;
+  const [passengerId, setPassengerId] = useState(null);
+  const [date, setDate] = useState(null);
 
   useEffect(() => {
     const grabData = async () => {
       const data = await readData(AsyncStorage, storage_keys.PHONE_NUMBER);
+      const data2 = await fetchData(db, db_queries.GET_PASSENGER_ID_BY_PHONE_NUMBER, [data]);
+      setPassengerId(data2[0].passenger_id);
       if (data !== null) setUserPhoneNumber(data);
+
+      const today = new Date();
+      const date =
+        today.getFullYear() +
+        "-" +
+        (today.getMonth() + 1) +
+        "-" +
+        today.getDate() +
+        "-" +
+        today.getHours() +
+        "-" +
+        today.getMinutes() +
+        "-" +
+        today.getSeconds();
+      setDate(date);
     };
     grabData().catch(console.error);
   }, []);
@@ -135,6 +154,15 @@ const WalletChargeScreen = ({ navigation, route }) => {
               "موجودی کیف پول به روز رسانی شد",
               "خطا در به روز رسانی کیف پول"
             );
+            manipulateData(db, db_queries.INSERT_TRANSACTION, [
+              "wallet",
+              parseInt(toEnglishNumber(value)),
+              date,
+              null,
+              null,
+              passengerId,
+              null,
+            ]);
             navigation.navigate("PassengerHome");
           }}
         >

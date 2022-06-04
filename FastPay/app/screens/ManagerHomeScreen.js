@@ -18,30 +18,30 @@ import AwesomeAlert from "react-native-awesome-alerts";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
 
-const PassengerHomeScreen = ({ navigation }) => {
+const ManagerHomeScreen = ({ navigation }) => {
   const [walletCharge, setWalletCharge] = useState(0);
   const [userPhoneNumber, setUserPhoneNumber] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState(null);
   const [imageUri, setImageUri] = useState(null);
 
-  useEffect(() => {
-    const onRefresh = navigation.addListener("focus", () => {
-      readDataAsync(AsyncStorage, storage_keys.PHONE_NUMBER).then((response) => {
-        const grabData = async () => {
-          const data2 = await fetchData(db, db_queries.GET_WALLET_CHARGE_BY_PHONE_NUMBER, [response]);
-          const data3 = await fetchData(db, db_queries.FETCH_PASSENGER_INFO_BY_PHONE_NUMBER, [response]);
-          // const data3 = await fetchData(db, db_queries.FETCH_PASSENGERS, []);
-          console.log(data3);
-          setWalletCharge(data2[0].passenger_walletCharge);
-          setImageUri(data3[0].passenger_imageUri);
-          if (response !== null) setUserPhoneNumber(response);
-        };
-        grabData().catch(console.error);
-      });
-    });
-    return onRefresh;
-  }, [navigation]);
+  //   useEffect(() => {
+  //     const onRefresh = navigation.addListener("focus", () => {
+  //       readDataAsync(AsyncStorage, storage_keys.PHONE_NUMBER).then((response) => {
+  //         const grabData = async () => {
+  //           const data2 = await fetchData(db, db_queries.GET_WALLET_CHARGE_BY_PHONE_NUMBER, [response]);
+  //           const data3 = await fetchData(db, db_queries.FETCH_PASSENGER_INFO_BY_PHONE_NUMBER, [response]);
+  //           // const data3 = await fetchData(db, db_queries.FETCH_PASSENGERS, []);
+  //           console.log(data3);
+  //           setWalletCharge(data2[0].passenger_walletCharge);
+  //           setImageUri(data3[0].passenger_imageUri);
+  //           if (response !== null) setUserPhoneNumber(response);
+  //         };
+  //         grabData().catch(console.error);
+  //       });
+  //     });
+  //     return onRefresh;
+  //   }, [navigation]);
 
   const hideAlert = () => {
     setShowAlert(false);
@@ -53,31 +53,13 @@ const PassengerHomeScreen = ({ navigation }) => {
       <View style={styles.container}>
         <View style={styles.header}>
           <HeaderCard width="100%" height="100%" />
-          {/* <AppIcon
-            family="FontAwesome"
-            name="user-circle-o"
+
+          <AppIcon
+            family="Feather"
+            name="menu"
             color={colors.darkBlue}
-            size={wp("11%")}
-            style={{ right: wp("7%") }}
-          /> */}
-          <Image
-            style={{ width: wp("14%"), height: wp("14%"), borderRadius: wp("7%"), right: wp("12%"), bottom: wp("2%") }}
-            // source={require("../assets/images/profile.jpeg")}
-            source={{
-              uri: imageUri,
-            }}
-          />
-          <AppText
-            text="موجودی کیف پول :"
-            size={wp("3%")}
-            color={colors.secondary}
-            style={{ right: "25%", marginBottom: "8%" }}
-          />
-          <AppText
-            text={trimMoney(toFarsiNumber(walletCharge)) + " تومان"}
-            size={wp("4%")}
-            color={colors.darkBlue}
-            style={{ right: "25%", top: "61%" }}
+            size={wp("7%")}
+            style={{ right: wp("8%"), top: hp("5.5%") }}
           />
 
           <TouchableOpacity
@@ -87,25 +69,17 @@ const PassengerHomeScreen = ({ navigation }) => {
             }}
             style={{ position: "absolute" }}
           >
-            <AppButton
-              width={wp("11%")}
-              height={wp("11%")}
-              borderRadius={wp("2.5%")}
-              style={{ marginRight: wp("75%") }}
-            />
             <AppIcon
-              family="MaterialCommunityIcons"
-              name="plus"
+              family="FontAwesome"
+              name="bell-o"
               color={colors.darkBlue}
               size={wp("7%")}
-              style={{ left: wp("2%"), top: wp("1.8%") }}
+              style={{ right: wp("35%"), bottom: hp("-2.8%") }}
             />
           </TouchableOpacity>
         </View>
         <View style={{ flex: 0.05 }} />
-        <View style={styles.title}>
-          <AppText text="روش پرداخت را مشخص کنید" size={wp("4%")} color={colors.darkBlue} />
-        </View>
+        <View style={styles.title}></View>
         <View style={styles.buttons}>
           <TouchableOpacity
             onPress={() => {
@@ -113,11 +87,11 @@ const PassengerHomeScreen = ({ navigation }) => {
             }}
             style={styles.QRStyle}
           >
-            <AppButton width="75%" height="65%" borderRadius={wp("3%")} />
-            <AppText text="پرداخت با اسکن بارکد" size={wp("3.5%")} color={colors.darkBlue} />
+            <AppButton width="65%" height="60%" borderRadius={wp("3%")} />
+            <AppText text="پرداخت ها" size={wp("4%")} color={colors.darkBlue} />
             <AppIcon
-              family="MaterialCommunityIcons"
-              name="qrcode-scan"
+              family="MaterialIcons"
+              name="payment"
               color={colors.darkBlue}
               size={wp("6.5%")}
               style={styles.icon}
@@ -187,11 +161,16 @@ const PassengerHomeScreen = ({ navigation }) => {
             style={styles.codeStyle}
           >
             <AppButton width="75%" height="65%" borderRadius={wp("3%")} color="secondary" />
-            <AppText text="پرداخت با کد پذیرنده" size={wp("3.5%")} />
-            <AppIcon family="MaterialCommunityIcons" name="cellphone-iphone" size={wp("7%")} style={styles.icon} />
+            <AppText text="راننده ها" size={wp("4%")} />
+            <AppIcon
+              family="MaterialCommunityIcons"
+              name="card-account-details-outline"
+              size={wp("7%")}
+              style={styles.icon}
+            />
           </TouchableOpacity>
         </View>
-        <View style={{ flex: 0.37 }} />
+        <View style={{ flex: 0.39 }} />
         <View style={styles.navigation}></View>
       </View>
     </>
@@ -209,7 +188,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors["medium"],
   },
   header: {
-    flex: 0.12,
+    flex: 0.1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.light,
@@ -225,7 +204,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    width: "68%",
+    width: "65%",
     marginBottom: wp("3.2%"),
     borderRadius: wp("3%"),
     backgroundColor: colors.primary,
@@ -243,7 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    width: "68%",
+    width: "65%",
     marginTop: wp("3.2%"),
     borderRadius: wp("3%"),
     backgroundColor: colors.secondary,
@@ -267,4 +246,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PassengerHomeScreen;
+export default ManagerHomeScreen;

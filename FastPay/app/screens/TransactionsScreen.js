@@ -14,29 +14,42 @@ import storage_keys from "../constants/storage_keys";
 import { readDataAsync } from "../functions/storage_functions";
 import db_queries from "../constants/db_queries";
 import { fetchData } from "../functions/db_functions";
-import { toFarsiNumber, gregorian_to_jalali, toEnglishNumber, jalali_to_gregorian } from "../functions/helperFunctions";
+import {
+  toFarsiNumber,
+  gregorian_to_jalali,
+  toEnglishNumber,
+  jalali_to_gregorian,
+  trimMoney,
+  trimDatetime,
+} from "../functions/helperFunctions";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
 
 const TransactionsScreen = ({ navigation, route }) => {
   const [transactions, setTransactions] = useState(null);
   const [driverName, setDriverName] = useState(null);
+  const [driverImage, setDriverImage] = useState(null);
+  const [drivercode, setDriverCode] = useState(null);
 
   useEffect(() => {
     const onRefresh = navigation.addListener("focus", () => {
-      readDataAsync(AsyncStorage, storage_keys.PHONE_NUMBER).then((response) => {
-        const grabData = async () => {
-          const data = await fetchData(db, db_queries.GET_PASSENGER_ID_BY_PHONE_NUMBER, [response]);
-          const data2 = await fetchData(db, db_queries.FETCH_TRANSACTIONS_BY_PASSENGER_ID, [data[0].passenger_id]);
-          console.log(data);
-          console.log(data2);
-          setTransactions(data2);
-        };
-        grabData().catch(console.error);
-      });
+      getTransactions();
     });
     return onRefresh;
   }, [navigation]);
+
+  const getTransactions = () => {
+    readDataAsync(AsyncStorage, storage_keys.PHONE_NUMBER).then((response) => {
+      const grabData = async () => {
+        const data = await fetchData(db, db_queries.GET_PASSENGER_ID_BY_PHONE_NUMBER, [response]);
+        const data2 = await fetchData(db, db_queries.FETCH_TRANSACTIONS_BY_PASSENGER_ID, [data[0].passenger_id]);
+        console.log(data);
+        console.log(data2);
+        setTransactions(data2);
+      };
+      grabData().catch(console.error);
+    });
+  };
 
   const renderItem = ({ item }) => {
     const date = item.transaction_dateTime.split("-");
@@ -45,34 +58,74 @@ const TransactionsScreen = ({ navigation, route }) => {
     if (item.transaction_type === "trip") {
       const grabData = async () => {
         const name = await fetchData(db, db_queries.GET_DRIVER_NAME_BY_ID, [item.driver_id]);
+        const image = await fetchData(db, db_queries.GET_DRIVER_IMAGE_BY_ID, [item.driver_id]);
+        const code = await fetchData(db, db_queries.GET_DRIVER_CODE_BY_ID, [item.driver_id]);
+        // console.log(image);
         setDriverName(name);
+        setDriverImage(image);
+        setDriverCode(code);
       };
       grabData().catch(console.error);
+      return (
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate("TransactionDetails", {
+              driver_name: driverName,
+              driver_code: drivercode[0].driver_acceptorCode,
+              transaction_source: item.transaction_source,
+              transaction_destination: item.transaction_destination,
+              dateTime: item.transaction_dateTime,
+              cost: item.transaction_cost,
+              driver_image: driverImage[0].driver_imageUrl,
+              driver_id: item.driver_id,
+            });
+          }}
+        >
+          <TransactionCard
+            width={wp("85%")}
+            height={hp("10%")}
+            borderRadius={wp("4%")}
+            iconType="rent"
+            iconUrl={
+              driverImage !== null
+                ? driverImage[0].driver_imageUrl
+                : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_4TfPNWILUAhTZpROTDfuyiYBMntr1ZT00A&usqp=CAU"
+            }
+            title={
+              driverName !== null
+                ? "پرداخت به " + driverName[0].driver_firstName + " " + driverName[0].driver_lastName
+                : "پرداخت به "
+            }
+            date={`${toFarsiNumber(formattedDate[0])}/${trimDatetime(toFarsiNumber(formattedDate[1]))}/${trimDatetime(
+              toFarsiNumber(formattedDate[2])
+            )}`}
+            time={`${trimDatetime(toFarsiNumber(date[3]))}:${trimDatetime(toFarsiNumber(date[4]))}:${trimDatetime(
+              toFarsiNumber(date[5])
+            )}`}
+            price={trimMoney(toFarsiNumber(parseInt(item.transaction_cost)))}
+            type="minus"
+          />
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TransactionCard
+          width={wp("85%")}
+          height={hp("10%")}
+          borderRadius={wp("4%")}
+          iconType="wallet"
+          title={item.transaction_type === "wallet" ? "افزایش اعتبار کیف پول" : "پرداخت از طرف FastPay"}
+          date={`${toFarsiNumber(formattedDate[0])}/${trimDatetime(toFarsiNumber(formattedDate[1]))}/${trimDatetime(
+            toFarsiNumber(formattedDate[2])
+          )}`}
+          time={`${trimDatetime(toFarsiNumber(date[3]))}:${trimDatetime(toFarsiNumber(date[4]))}:${trimDatetime(
+            toFarsiNumber(date[5])
+          )}`}
+          price={trimMoney(toFarsiNumber(parseInt(item.transaction_cost)))}
+          type="plus"
+        />
+      );
     }
-
-    return (
-      <TransactionCard
-        width={wp("85%")}
-        height={hp("10%")}
-        borderRadius={10}
-        iconType="wallet"
-        title={
-          item.transaction_type === "trip"
-            ? driverName !== null
-              ? "پرداخت به " + driverName[0].driver_firstName + " " + driverName[0].driver_lastName
-              : "پرداخت به "
-            : item.transaction_type === "wallet"
-            ? "افزایش اعتبار کیف پول"
-            : "پرداخت از طرف FastPay"
-        }
-        date={`${toFarsiNumber(formattedDate[0])}/${toFarsiNumber(formattedDate[1])}/${toFarsiNumber(
-          formattedDate[2]
-        )}`}
-        time={`${toFarsiNumber(date[3])}:${toFarsiNumber(date[4])}:${toFarsiNumber(date[5])}`}
-        price={toFarsiNumber(parseInt(item.transaction_cost))}
-        type={item.transaction_type === "trip" ? "minus" : "plus"}
-      />
-    );
   };
 
   const getFilteredTransactions = () => {
@@ -108,13 +161,22 @@ const TransactionsScreen = ({ navigation, route }) => {
             color={colors.darkBlue}
             style={{ right: "5%", marginBottom: "15%" }}
           />
-          <AppIcon
-            family="Feather"
-            name="refresh-ccw"
-            color={colors.darkBlue}
-            size={wp("6%")}
-            style={{ left: wp("5%"), marginBottom: "15%" }}
-          />
+
+          <TouchableOpacity
+            style={{ position: "absolute" }}
+            onPress={() => {
+              route.params = undefined;
+              getTransactions();
+            }}
+          >
+            <AppIcon
+              family="Feather"
+              name="refresh-ccw"
+              color={colors.darkBlue}
+              size={wp("6%")}
+              style={{ marginLeft: wp("5%"), marginBottom: "15%", position: "relative" }}
+            />
+          </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => {

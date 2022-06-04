@@ -23,12 +23,28 @@ function TransactionCard({
     <View
       style={[
         styles.card,
-        { backgroundColor: colors.secondary, width: width, height: height, borderRadius: borderRadius },
+        {
+          backgroundColor: colors.secondary,
+          width: width,
+          height: height,
+          borderRadius: borderRadius,
+          shadowColor: colors.darkBlue,
+          shadowOffset: {
+            width: 0,
+            height: 2,
+          },
+          shadowOpacity: 0.23,
+          shadowRadius: 2.62,
+          elevation: 3,
+        },
         style,
       ]}
     >
       {iconType === "rent" || iconType === "fastPay" ? (
-        <Image source={iconUrl} width={wp("10%")} height={wp("10%")} />
+        <Image
+          style={{ width: wp("9%"), height: wp("10%"), left: wp("73.5%"), borderRadius: wp("6%") }}
+          source={{ uri: iconUrl }}
+        />
       ) : iconType === "wallet" ? (
         <AppIcon family="Ionicons" name="wallet-outline" size={wp("8%")} style={{ right: wp("4%") }} />
       ) : null}
@@ -36,15 +52,15 @@ function TransactionCard({
       <AppText text={title} size={wp("3%")} style={{ right: wp("15%"), bottom: wp("9%") }} />
       <AppText
         text={time + "  -  " + date}
-        size={wp("2.5%")}
+        size={wp("2.8%")}
         color={colors.darkBlue}
         style={{ right: wp("15%"), bottom: wp("4%") }}
       />
-      <AppText text={price} size={wp("3%")} style={{ left: wp("15%") }} />
+      <AppText text={price} size={wp("4%")} style={{ left: wp("15%") }} />
       {type === "plus" ? (
-        <AppIcon family="Feather" name="plus" size={wp("3%")} style={{ left: wp("11.5%") }} />
+        <AppIcon family="Feather" name="plus" size={wp("3%")} style={{ left: wp("11.5%"), bottom: wp("6.8%") }} />
       ) : type === "minus" ? (
-        <AppIcon family="Feather" name="minus" size={wp("3%")} style={{ left: wp("11.5%") }} />
+        <AppIcon family="Feather" name="minus" size={wp("3.2%")} style={{ left: wp("11.5%"), bottom: wp("6.8%") }} />
       ) : null}
 
       <AppText text="تومان" size={wp("2.7%")} color={colors.darkBlue} style={{ left: wp("3.5%") }} />
