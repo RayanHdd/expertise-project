@@ -1,18 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, StyleSheet, TouchableOpacity, Image, TouchableWithoutFeedback, TextInput, Animated } from "react-native";
-import { widthPercentageToDP as wp } from "react-native-responsive-screen";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  TouchableWithoutFeedback,
+  TextInput,
+  Animated,
+  StatusBar,
+  Platform,
+  SafeAreaView,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import AwesomeAlert from "react-native-awesome-alerts";
 import PhoneInput from "react-native-phone-number-input";
-import { SimpleAnimation } from "react-native-simple-animations";
-import db_queries from "../constants/db_queries";
-import { fetchData } from "../functions/db_functions";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import * as SQLite from "expo-sqlite";
 
 import AppButton from "../components/Button";
 import AppIcon from "../components/Icon";
 import AppText from "../components/Text";
 import colors from "../config/colors";
+import db_queries from "../constants/db_queries";
+import { fetchData } from "../functions/db_functions";
+import { saveData } from "../functions/storage_functions";
 import { sendSmsVerification } from "../api/verify";
+import storage_keys from "../constants/storage_keys";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
 
@@ -30,55 +43,58 @@ const SignupScreen = ({ navigation }) => {
   const [checkMark, setCheckMark] = useState(false);
   const phoneInput = useRef(null);
 
-  const _start = () => {
+  const _startAnimation = () => {
     Animated.timing(animatedValue, {
       toValue: 1,
-      duration: 800,
+      duration: 500,
       useNativeDriver: true,
     }).start();
   };
 
   const ifRecordExists = async () => {
-    if (username !== "" && password !== "") {
+    if (managerUsername === "" && managerPassword === "") {
       const data = await fetchData(db, db_queries.CHECK_IF_DRIVER_EXISTS, [username, password]);
       if (Object.values(data[0])[0] === 0) {
-        console.log(false);
         toast.show("نام کاربری و/یا رمز عبور اشتباه است", {
           type: "normal",
           duration: 3000,
         });
       } else {
+        if (checkMark) saveData(AsyncStorage, storage_keys.IS_DRIVER_LOGGED_IN, "True");
+        const driverInfo = await fetchData(db, db_queries.FETCH_DRIVER_INFO_BY_USERNAME_AND_PASSWORD, [
+          username,
+          password,
+        ]);
+        saveData(AsyncStorage, storage_keys.DRIVER_ID, driverInfo[0].driver_id.toString());
         navigation.navigate("DriverHome");
       }
-    } else {
+    } else if (username === "" && password === "") {
       const data = await fetchData(db, db_queries.CHECK_IF_MANAGER_EXISTS, [managerUsername, managerPassword]);
       if (Object.values(data[0])[0] === 0) {
-        console.log(false);
         toast.show("نام کاربری و/یا رمز عبور اشتباه است", {
           type: "normal",
           duration: 3000,
         });
       } else {
-        console.log(true);
-        navigation.navigate("ManagerHome");
+        if (checkMark) saveData(AsyncStorage, storage_keys.IS_MANAGER_LOGGED_IN, "True");
+        navigation.navigate("ManagerTabs");
       }
+    }
+  };
+
+  const ifPassengerExists = async () => {
+    const data = await fetchData(db, db_queries.CHECK_IF_PASSENGER_EXISTS, [formattedValue]);
+    if (Object.values(data[0])[0] === 1) {
+      saveData(AsyncStorage, storage_keys.IS_SIGNED_UP, "True");
+      navigation.navigate("Tabs");
     }
   };
 
   const activeAlert = () => {
     setShowAlert(true);
   };
-
   const hideAlert = () => {
     setShowAlert(false);
-  };
-
-  const activeProgress = () => {
-    setShowProgress(true);
-  };
-
-  const hideProgress = () => {
-    setShowProgress(false);
   };
 
   useEffect(() => {
@@ -87,27 +103,31 @@ const SignupScreen = ({ navigation }) => {
 
   return (
     <>
-      <View style={styles.container}>
-        <View style={{ flex: 0.05 }} />
+      <SafeAreaView style={styles.container}>
+        {Platform.OS === "android" ? (
+          <View style={{ flex: StatusBar.length + 0.04 }} />
+        ) : (
+          <View style={{ flex: 0.04 }} />
+        )}
 
         <View style={styles.image}>
           <Image style={{ width: "70%", height: "100%" }} source={require("../assets/images/logo.png")} />
         </View>
 
-        <View style={{ flex: 0.02 }} />
+        <View style={{ flex: 0.03 }} />
 
         <View style={styles.title}>
-          <AppText text="نوع کاربری" size={wp("3%")} color={colors.darkBlue} style={{ right: wp("15%") }} />
+          <AppText text="نوع کاربری" size={hp("2%")} color={colors.darkBlue} style={{ right: wp("15%") }} />
         </View>
 
         <View style={styles.buttons}>
           <TouchableWithoutFeedback
             onPress={() => {
               setActiveUser("passenger");
-              // setUsername("");
-              // setPassword("");
-              // setManagerUsername("");
-              // setManagerPassword("");
+              setUsername("");
+              setPassword("");
+              setManagerUsername("");
+              setManagerPassword("");
             }}
           >
             <View
@@ -126,15 +146,15 @@ const SignupScreen = ({ navigation }) => {
               <AppButton width="100%" height="100%" borderRadius={wp("2%")} />
               <AppText
                 text="مسافر"
-                size={wp("3%")}
+                size={hp("1.8%")}
                 color={colors.darkBlue}
-                style={{ left: wp("5.5%"), top: wp("13%") }}
+                style={{ left: wp("4%"), top: hp("7%") }}
               />
               <AppIcon
                 family="MaterialCommunityIcons"
                 name="seat-passenger"
                 size={wp("8%")}
-                style={{ left: wp("5.2%") }}
+                style={{ left: wp("4.8%") }}
               />
             </View>
           </TouchableWithoutFeedback>
@@ -144,7 +164,7 @@ const SignupScreen = ({ navigation }) => {
               setActiveUser("driver");
               setManagerUsername("");
               setManagerPassword("");
-              _start();
+              _startAnimation();
             }}
           >
             <View
@@ -163,9 +183,9 @@ const SignupScreen = ({ navigation }) => {
               <AppButton width="100%" height="100%" borderRadius={wp("2%")} />
               <AppText
                 text="راننده"
-                size={wp("3%")}
+                size={hp("1.9%")}
                 color={colors.darkBlue}
-                style={{ left: wp("5.7%"), top: wp("13%") }}
+                style={{ left: wp("4.4%"), top: hp("7%") }}
               />
               <AppIcon family="MaterialCommunityIcons" name="taxi" size={wp("8%")} style={{ left: wp("4.5%") }} />
             </View>
@@ -176,6 +196,7 @@ const SignupScreen = ({ navigation }) => {
               setActiveUser("manager");
               setUsername("");
               setPassword("");
+              _startAnimation();
             }}
           >
             <View
@@ -194,9 +215,9 @@ const SignupScreen = ({ navigation }) => {
               <AppButton width="100%" height="100%" borderRadius={wp("2%")} />
               <AppText
                 text="مدیر"
-                size={wp("3%")}
+                size={hp("1.9%")}
                 color={colors.darkBlue}
-                style={{ left: wp("5.7%"), top: wp("13%") }}
+                style={{ left: wp("5%"), top: hp("7%") }}
               />
               <AppIcon family="Fontisto" name="person" size={wp("6%")} style={{ left: wp("5.8%") }} />
             </View>
@@ -211,8 +232,8 @@ const SignupScreen = ({ navigation }) => {
               <Animated.View
                 style={{
                   position: "absolute",
-                  right: wp("28%"),
-                  bottom: wp("24.5%"),
+                  right: hp("16%"),
+                  bottom: hp("14.5%"),
                   transform: [
                     {
                       translateX: animatedValue.interpolate({
@@ -223,12 +244,7 @@ const SignupScreen = ({ navigation }) => {
                   ],
                 }}
               >
-                <AppText
-                  text="نام کاربری"
-                  size={wp("3%")}
-                  color={colors.darkBlue}
-                  // style={{ right: wp("16%"), bottom: wp("20%") }}
-                />
+                <AppText text="نام کاربری" size={hp("2%")} color={colors.darkBlue} />
               </Animated.View>
               <Animated.View
                 style={{
@@ -236,23 +252,10 @@ const SignupScreen = ({ navigation }) => {
                   width: "75%",
                   height: "55%",
                   borderRadius: wp("2%"),
-                  backgroundColor: colors.light,
+                  backgroundColor: "white",
                   padding: wp("3.2%"),
-                  borderWidth: wp("0.2%"),
+                  borderWidth: hp("0.2%"),
                   borderColor: colors.darkBlue,
-                  // textAlignVertical: "top",
-                  // textAlign: "auto",
-                  // fontSize: wp("3%"),
-                  // color: colors.darkBlue,
-                  // fontFamily: "Dirooz",
-                  shadowColor: colors.darkBlue,
-                  shadowOffset: {
-                    width: 0,
-                    height: 2,
-                  },
-                  shadowOpacity: 0.23,
-                  shadowRadius: 2.62,
-                  elevation: 3,
                   transform: [
                     {
                       translateX: animatedValue.interpolate({
@@ -264,39 +267,25 @@ const SignupScreen = ({ navigation }) => {
                 }}
               >
                 <TextInput
-                  value={username !== "" ? username : managerUsername}
+                  value={activeUser === "driver" ? username : managerUsername}
                   placeholder="نام کاربری خود را وارد کنید"
+                  selectionColor={colors.darkBlue}
                   onKeyPress={({ nativeEvent: { key: keyValue } }) => {
                     if (keyValue === "Backspace") {
-                      if (username !== "") setUsername(username.slice(0, username.length - 1));
+                      if (activeUser === "driver") setUsername(username.slice(0, username.length - 1));
                       else setManagerUsername(managerUsername.slice(0, managerUsername.length - 1));
                     }
                   }}
                   onChangeText={(txt) => {
-                    if (username !== "") setUsername(txt);
+                    if (activeUser === "driver") setUsername(txt);
                     else setManagerUsername(txt);
                   }}
                   style={{
-                    // width: "75%",
-                    // height: "55%",
-                    // borderRadius: wp("2%"),
-                    // backgroundColor: colors.light,
-                    // padding: wp("3.2%"),
-                    // borderWidth: wp("0.2%"),
-                    // borderColor: colors.darkBlue,
                     textAlignVertical: "top",
-                    textAlign: "auto",
-                    fontSize: wp("3.5%"),
+                    textAlign: "right",
+                    fontSize: wp("3.8%"),
                     color: colors.darkBlue,
                     fontFamily: "Dirooz",
-                    // shadowColor: colors.darkBlue,
-                    // shadowOffset: {
-                    //   width: 0,
-                    //   height: 2,
-                    // },
-                    // shadowOpacity: 0.23,
-                    // shadowRadius: 2.62,
-                    // elevation: 3,
                   }}
                 />
               </Animated.View>
@@ -305,8 +294,8 @@ const SignupScreen = ({ navigation }) => {
               <Animated.View
                 style={{
                   position: "absolute",
-                  right: wp("26%"),
-                  bottom: wp("24.5%"),
+                  right: hp("14.5%"),
+                  bottom: hp("14.2%"),
                   transform: [
                     {
                       translateX: animatedValue.interpolate({
@@ -317,12 +306,7 @@ const SignupScreen = ({ navigation }) => {
                   ],
                 }}
               >
-                <AppText
-                  text="رمز عبور"
-                  size={wp("3%")}
-                  color={colors.darkBlue}
-                  // style={{ right: wp("16%"), bottom: wp("20%") }}
-                />
+                <AppText text="رمز عبور" size={hp("2%")} color={colors.darkBlue} />
               </Animated.View>
               <Animated.View
                 style={{
@@ -330,23 +314,10 @@ const SignupScreen = ({ navigation }) => {
                   width: "75%",
                   height: "55%",
                   borderRadius: wp("2%"),
-                  backgroundColor: colors.light,
+                  backgroundColor: "white",
                   padding: wp("3.2%"),
-                  borderWidth: wp("0.2%"),
+                  borderWidth: hp("0.2%"),
                   borderColor: colors.darkBlue,
-                  // textAlignVertical: "top",
-                  // textAlign: "right",
-                  // fontSize: wp("3%"),
-                  // color: colors.darkBlue,
-                  // fontFamily: "Dirooz",
-                  shadowColor: colors.darkBlue,
-                  shadowOffset: {
-                    width: 0,
-                    height: 2,
-                  },
-                  shadowOpacity: 0.23,
-                  shadowRadius: 2.62,
-                  elevation: 3,
                   transform: [
                     {
                       translateX: animatedValue.interpolate({
@@ -358,40 +329,26 @@ const SignupScreen = ({ navigation }) => {
                 }}
               >
                 <TextInput
-                  value={password !== "" ? password : managerPassword}
+                  value={activeUser === "driver" ? password : managerPassword}
                   placeholder="رمز عبور خود را وارد کنید"
+                  selectionColor={colors.darkBlue}
                   secureTextEntry={true}
                   onKeyPress={({ nativeEvent: { key: keyValue } }) => {
                     if (keyValue === "Backspace") {
-                      if (password !== "") setPassword(password.slice(0, password.length - 1));
+                      if (activeUser === "driver") setPassword(password.slice(0, password.length - 1));
                       else setManagerPassword(managerPassword.slice(0, managerPassword.length - 1));
                     }
                   }}
                   onChangeText={(txt) => {
-                    if (password !== "") setPassword(txt);
+                    if (activeUser === "driver") setPassword(txt);
                     else setManagerPassword(txt);
                   }}
                   style={{
-                    // width: "75%",
-                    // height: "55%",
-                    // borderRadius: wp("2%"),
-                    // backgroundColor: colors.light,
-                    // padding: wp("3.2%"),
-                    // borderWidth: wp("0.2%"),
-                    // borderColor: colors.darkBlue,
                     textAlignVertical: "top",
                     textAlign: "right",
-                    fontSize: wp("3.5%"),
+                    fontSize: wp("3.8%"),
                     color: colors.darkBlue,
                     fontFamily: "Dirooz",
-                    // shadowColor: colors.darkBlue,
-                    // shadowOffset: {
-                    //   width: 0,
-                    //   height: 2,
-                    // },
-                    // shadowOpacity: 0.23,
-                    // shadowRadius: 2.62,
-                    // elevation: 3,
                   }}
                 />
               </Animated.View>
@@ -405,12 +362,12 @@ const SignupScreen = ({ navigation }) => {
                 <Animated.View
                   style={{
                     position: "absolute",
-                    width: wp("3.8%"),
-                    height: wp("3.8%"),
-                    right: wp("15%"),
-                    borderRadius: wp("0.8%"),
-                    backgroundColor: colors.light,
-                    borderWidth: wp("0.2%"),
+                    width: hp("2.5%"),
+                    height: hp("2.5%"),
+                    right: wp("17%"),
+                    borderRadius: hp("0.5%"),
+                    backgroundColor: "white",
+                    borderWidth: hp("0.2%"),
                     borderColor: colors.darkBlue,
                     transform: [
                       {
@@ -421,36 +378,22 @@ const SignupScreen = ({ navigation }) => {
                       },
                     ],
                   }}
-                >
-                  <View
-                    style={
-                      {
-                        // width: wp("3.8%"),
-                        // height: wp("3.8%"),
-                        // borderRadius: wp("0.8%"),
-                        // backgroundColor: colors.light,
-                        // borderWidth: wp("0.2%"),
-                        // borderColor: colors.darkBlue,
-                        // left: wp("33%"),
-                      }
-                    }
-                  />
-                </Animated.View>
+                ></Animated.View>
                 {checkMark ? (
                   <AppIcon
                     family="Entypo"
                     name="check"
                     color={colors.darkBlue}
-                    size={wp("5%")}
-                    style={{ right: wp("14.5%") }}
+                    size={hp("3.2%")}
+                    style={{ right: wp("16.3%") }}
                   />
                 ) : null}
 
                 <Animated.View
                   style={{
                     position: "absolute",
-                    right: wp("39%"),
-                    bottom: wp("5%"),
+                    right: wp("43%"),
+                    bottom: hp("2.7%"),
                     transform: [
                       {
                         translateX: animatedValue.interpolate({
@@ -516,39 +459,18 @@ const SignupScreen = ({ navigation }) => {
                   },
                 ],
               }}
-            >
-              {/* <AppText
-                text="ذخیره اطلاعات"
-                color={colors.secondary}
-                size={wp("3.2%")}
-                style={{ textDecorationLine: "underline" }}
-              /> */}
-            </Animated.View>
+            ></Animated.View>
+
             <TouchableOpacity
               style={styles.button}
               onPress={() => {
                 ifRecordExists();
-                // const checkValid = phoneInput.current?.isValidNumber(value);
-                // if (checkValid) {
-                //   sendSmsVerification(formattedValue).then((sent) => {
-                //     setShowProgress(false);
-                //     console.log("Sent!");
-                //     console.log(sent);
-                //     navigation.navigate("ConfirmationCode", { phoneNumber: formattedValue });
-                //   });
-                // } else {
-                //   setShowProgress(false);
-                //   toast.show("شماره نامعتبر است", {
-                //     type: "normal",
-                //     duration: 3000,
-                //   });
-                // }
               }}
             >
               <Animated.View
                 style={{
                   position: "absolute",
-                  width: wp("60%"),
+                  width: wp("70%"),
                   height: "100%",
                   transform: [
                     {
@@ -560,22 +482,13 @@ const SignupScreen = ({ navigation }) => {
                   ],
                 }}
               >
-                <AppButton
-                  borderRadius={wp("3%")}
-                  width={wp("60%")}
-                  height="100%"
-                  style={
-                    {
-                      // position: "absolute",
-                    }
-                  }
-                />
+                <AppButton borderRadius={wp("3%")} width={wp("70%")} height="100%" />
               </Animated.View>
               <Animated.View
                 style={{
                   position: "absolute",
-                  right: wp("34%"),
-                  bottom: wp("9.5%"),
+                  right: wp("39%"),
+                  bottom: hp("6.2%"),
                   transform: [
                     {
                       translateX: animatedValue.interpolate({
@@ -586,7 +499,7 @@ const SignupScreen = ({ navigation }) => {
                   ],
                 }}
               >
-                <AppText text="ورود" color={colors.darkBlue} size={wp("4.5%")} />
+                <AppText text="ورود" color={colors.darkBlue} size={hp("3%")} />
               </Animated.View>
             </TouchableOpacity>
             <View style={{ flex: 0.18 }} />
@@ -596,9 +509,9 @@ const SignupScreen = ({ navigation }) => {
             <View style={styles.input}>
               <AppText
                 text="شماره تلفن همراه"
-                size={wp("3%")}
+                size={wp("3.5%")}
                 color={colors.darkBlue}
-                style={{ right: wp("16%"), bottom: wp("24%") }}
+                style={{ right: wp("16%"), bottom: hp("12%") }}
               />
               <PhoneInput
                 ref={phoneInput}
@@ -608,11 +521,15 @@ const SignupScreen = ({ navigation }) => {
                   width: "75%",
                   height: "55%",
                   borderRadius: wp("2%"),
-                  backgroundColor: colors.light,
+                  backgroundColor: "white",
                   paddingRight: wp("5%"),
                 }}
-                textContainerStyle={{ fontSize: wp("4%"), color: colors.darkBlue }}
-                textInputStyle={{ fontSize: wp("4%"), color: colors.darkBlue, letterSpacing: wp("0.35%") }}
+                textContainerStyle={{ fontSize: wp("4%"), color: colors.darkBlue, backgroundColor: "white" }}
+                textInputStyle={{
+                  fontSize: wp("4%"),
+                  color: colors.darkBlue,
+                  letterSpacing: wp("0.35%"),
+                }}
                 codeTextStyle={{ fontSize: wp("4%"), color: colors.darkBlue }}
                 defaultCode="IR"
                 layout="first"
@@ -680,10 +597,10 @@ const SignupScreen = ({ navigation }) => {
                 setShowProgress(true);
                 const checkValid = phoneInput.current?.isValidNumber(value);
                 if (checkValid) {
+                  ifPassengerExists();
                   sendSmsVerification(formattedValue).then((sent) => {
                     setShowProgress(false);
-                    console.log("Sent!");
-                    console.log(sent);
+                    console.log("Sent!", sent);
                     navigation.navigate("ConfirmationCode", { phoneNumber: formattedValue });
                   });
                 } else {
@@ -697,40 +614,32 @@ const SignupScreen = ({ navigation }) => {
             >
               <AppButton
                 borderRadius={wp("3%")}
-                width={wp("60%")}
+                width={wp("70%")}
                 height="100%"
                 style={{
                   position: "absolute",
                 }}
               />
-              <AppText text="ادامه" color={colors.darkBlue} size={wp("4.5%")} style={{ right: wp("26%") }} />
+              <AppText text="ادامه" color={colors.darkBlue} size={hp("3%")} style={{ right: wp("28%") }} />
             </TouchableOpacity>
 
-            <View style={{ flex: 0.34 }} />
+            <View style={{ flex: 0.32 }} />
           </>
         )}
-      </View>
+      </SafeAreaView>
     </>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    flex: 0.07,
+    flex: 0.08,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.medium,
     borderRadius: wp("3%"),
-    width: wp("60%"),
+    width: wp("70%"),
     alignSelf: "center",
-    shadowColor: colors.darkBlue,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    // elevation: 3,
   },
   buttons: {
     flex: 0.09,
