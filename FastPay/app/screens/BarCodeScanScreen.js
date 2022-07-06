@@ -1,26 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Button, Dimensions, StyleSheet, TouchableOpacity, Text, View, StatusBar } from "react-native";
-import { BarCodeScanner, BarCodeScannerResult } from "expo-barcode-scanner";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
-import { toFarsiNumber } from "../functions/helperFunctions";
-
+import { StyleSheet, TouchableOpacity, Text, View, StatusBar } from "react-native";
 import BarcodeMask from "react-native-barcode-mask";
-import AppIcon from "../components/Icon";
-import colors from "../config/colors";
+import { BarCodeScanner } from "expo-barcode-scanner";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+
 import AppButton from "../components/Button";
+import AppIcon from "../components/Icon";
 import AppText from "../components/Text";
-const finderWidth = 280;
-const finderHeight = 230;
-const width = Dimensions.get("window").width;
-const height = Dimensions.get("window").height;
-const viewMinX = (width - finderWidth) / 2;
-const viewMinY = (height - finderHeight) / 2;
+import colors from "../config/colors";
+import { toFarsiNumber } from "../functions/helperFunctions";
 
 export default function BarCodeScanScreen({ navigation, route }) {
   const { wallet_charge, passenger_phone } = route.params;
   const [hasPermission, setHasPermission] = useState(null);
   const [type, setType] = useState(BarCodeScanner.Constants.Type.back);
   const [scanned, setScanned] = useState(false);
+
   useEffect(() => {
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
@@ -28,33 +23,9 @@ export default function BarCodeScanScreen({ navigation, route }) {
     })();
   }, []);
 
-  // const handleBarCodeScanned = (scanningResult) => {
-  //   if (!scanned) {
-  //     const { type, data, bounds: { origin } = {} } = scanningResult;
-  //     // @ts-ignore
-  //     console.log(origin);
-  //     const { x, y } = origin;
-  //     if (x >= viewMinX && y >= viewMinY && x <= viewMinX + finderWidth / 2 && y <= viewMinY + finderHeight / 2) {
-  //       setScanned(true);
-  //       alert(`Bar code with type ${type} and data ${data} has been scanned!`);
-  //     }
-  //   }
-  // };
-
-  const handleBarCodeScanned = ({ type, data }) => {
+  const handleBarCodeScanned = ({ data }) => {
     if (!scanned) {
-      // const { type, data, bounds: { origin } = {} } = scanningResult;
-      // // @ts-ignore
-      // console.log(origin);
-      // const { x, y } = origin;
-      // if (x >= viewMinX && y >= viewMinY && x <= viewMinX + finderWidth / 2 && y <= viewMinY + finderHeight / 2) {
-      //   setScanned(true);
-      //   alert(`Bar code with type ${type} and data ${data} has been scanned!`);
-      // }
-
-      // }
       setScanned(true);
-      console.log(`Bar code with type ${type} and data ${data} has been scanned!`);
       navigation.navigate("Payment", {
         acceptor_code: toFarsiNumber(data),
         wallet_charge: wallet_charge,
@@ -64,10 +35,18 @@ export default function BarCodeScanScreen({ navigation, route }) {
   };
 
   if (hasPermission === null) {
-    return <Text>Requesting for camera permission</Text>;
+    return (
+      <Text style={{ color: "white", justifyContent: "center", alignItems: "center", fontSize: hp("5%") }}>
+        Requesting for camera permission
+      </Text>
+    );
   }
   if (hasPermission === false) {
-    return <Text>No access to camera</Text>;
+    return (
+      <Text style={{ color: "white", justifyContent: "center", alignItems: "center", fontSize: hp("5%") }}>
+        No access to camera
+      </Text>
+    );
   }
   return (
     <View style={{ flex: 1 }}>
@@ -90,27 +69,19 @@ export default function BarCodeScanScreen({ navigation, route }) {
               alignItems: "flex-end",
             }}
             onPress={() => {
-              // setType(
-              //   type === BarCodeScanner.Constants.Type.back
-              //     ? BarCodeScanner.Constants.Type.front
-              //     : BarCodeScanner.Constants.Type.back
-              // );
               navigation.navigate("PassengerHome");
             }}
           >
-            {/* <Text style={{ fontSize: 18, margin: 5, color: "white" }}> Flip </Text> */}
-            {/* <Button
-              title="CLOSE"
-              onPress={() => {
-                navigation.navigate("PassengerHome");
-              }}
-            /> */}
-            {/* <TouchableOpacity> */}
-            <AppIcon family="AntDesign" name="close" color={colors.light} size={wp("7%")} style={{ right: wp("4%") }} />
-            {/* </TouchableOpacity> */}
+            <AppIcon
+              family="AntDesign"
+              name="close"
+              color="white"
+              size={hp("3.8%")}
+              style={{ right: wp("7%"), top: hp("3%") }}
+            />
           </TouchableOpacity>
         </View>
-        <BarcodeMask edgeColor={colors.primary} showAnimatedLine />
+        <BarcodeMask width={wp("70%")} height={hp("30%")} edgeColor={colors.primary} showAnimatedLine />
         {scanned && (
           <TouchableOpacity
             onPress={() => setScanned(false)}
