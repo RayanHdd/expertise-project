@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, StatusBar, TextInput, Image } from "react-native";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { View, StyleSheet, TouchableOpacity, StatusBar, TextInput, Image, Platform, SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AwesomeAlert from "react-native-awesome-alerts";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import * as SQLite from "expo-sqlite";
 
 import AppButton from "../components/Button";
 import AppIcon from "../components/Icon";
 import AppText from "../components/Text";
-import HeaderCard from "../components/HeaderCard";
 import colors from "../config/colors";
 import db_queries from "../constants/db_queries";
 import { fetchData } from "../functions/db_functions";
-import { toFarsiNumber, trimMoney } from "../functions/helperFunctions";
-import storage_keys from "../constants/storage_keys";
+import HeaderCard from "../components/HeaderCard";
 import { readDataAsync } from "../functions/storage_functions";
-import AwesomeAlert from "react-native-awesome-alerts";
+import storage_keys from "../constants/storage_keys";
+import { toFarsiNumber, trimMoney } from "../functions/helperFunctions";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
 
@@ -29,12 +29,10 @@ const PassengerHomeScreen = ({ navigation }) => {
     const onRefresh = navigation.addListener("focus", () => {
       readDataAsync(AsyncStorage, storage_keys.PHONE_NUMBER).then((response) => {
         const grabData = async () => {
-          const data2 = await fetchData(db, db_queries.GET_WALLET_CHARGE_BY_PHONE_NUMBER, [response]);
-          const data3 = await fetchData(db, db_queries.FETCH_PASSENGER_INFO_BY_PHONE_NUMBER, [response]);
-          // const data3 = await fetchData(db, db_queries.FETCH_PASSENGERS, []);
-          console.log(data3);
-          setWalletCharge(data2[0].passenger_walletCharge);
-          setImageUri(data3[0].passenger_imageUri);
+          const wallet_charge = await fetchData(db, db_queries.GET_WALLET_CHARGE_BY_PHONE_NUMBER, [response]);
+          const passenger_info = await fetchData(db, db_queries.FETCH_PASSENGER_INFO_BY_PHONE_NUMBER, [response]);
+          setWalletCharge(wallet_charge[0].passenger_walletCharge);
+          setImageUri(passenger_info[0].passenger_imageUri);
           if (response !== null) setUserPhoneNumber(response);
         };
         grabData().catch(console.error);
@@ -50,55 +48,51 @@ const PassengerHomeScreen = ({ navigation }) => {
 
   return (
     <>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        {Platform.OS === "android" ? <View style={{ flex: StatusBar.length, backgroundColor: colors.light }} /> : null}
         <View style={styles.header}>
           <HeaderCard width="100%" height="100%" />
-          {/* <AppIcon
-            family="FontAwesome"
-            name="user-circle-o"
-            color={colors.darkBlue}
-            size={wp("11%")}
-            style={{ right: wp("7%") }}
-          /> */}
           <Image
             style={{ width: wp("14%"), height: wp("14%"), borderRadius: wp("7%"), right: wp("12%"), bottom: wp("2%") }}
-            // source={require("../assets/images/profile.jpeg")}
             source={{
               uri: imageUri,
             }}
           />
           <AppText
             text="موجودی کیف پول :"
-            size={wp("3%")}
+            size={hp("1.9%")}
             color={colors.secondary}
             style={{ right: "25%", marginBottom: "8%" }}
           />
           <AppText
             text={trimMoney(toFarsiNumber(walletCharge)) + " تومان"}
-            size={wp("4%")}
+            size={hp("2.4%")}
             color={colors.darkBlue}
-            style={{ right: "25%", top: "61%" }}
+            style={{ right: "25%", top: hp("7.2%") }}
           />
 
           <TouchableOpacity
             onPress={() => {
               navigation.navigate("WalletCharge", { currentWalletCharge: walletCharge });
-              console.log(userPhoneNumber);
             }}
-            style={{ position: "absolute" }}
+            style={{
+              position: "absolute",
+            }}
           >
             <AppButton
-              width={wp("11%")}
-              height={wp("11%")}
+              width={hp("6%")}
+              height={hp("6%")}
               borderRadius={wp("2.5%")}
-              style={{ marginRight: wp("75%") }}
+              style={{
+                marginRight: wp("75%"),
+              }}
             />
             <AppIcon
               family="MaterialCommunityIcons"
               name="plus"
               color={colors.darkBlue}
-              size={wp("7%")}
-              style={{ left: wp("2%"), top: wp("1.8%") }}
+              size={hp("3.8%")}
+              style={{ left: wp("2.1%"), top: hp("1%") }}
             />
           </TouchableOpacity>
         </View>
@@ -114,7 +108,7 @@ const PassengerHomeScreen = ({ navigation }) => {
             style={styles.QRStyle}
           >
             <AppButton width="75%" height="65%" borderRadius={wp("3%")} />
-            <AppText text="پرداخت با اسکن بارکد" size={wp("3.5%")} color={colors.darkBlue} />
+            <AppText text="پرداخت با اسکن بارکد" size={hp("2%")} color={colors.darkBlue} />
             <AppIcon
               family="MaterialCommunityIcons"
               name="qrcode-scan"
@@ -131,8 +125,8 @@ const PassengerHomeScreen = ({ navigation }) => {
               <TextInput
                 value={confirmationCode}
                 keyboardType="numeric"
+                selectionColor={colors.darkBlue}
                 onKeyPress={({ nativeEvent: { key: keyValue } }) => {
-                  console.log(keyValue);
                   if (keyValue === "Backspace") {
                     setConfirmationCode(confirmationCode.slice(0, confirmationCode.length - 1));
                   }
@@ -145,7 +139,7 @@ const PassengerHomeScreen = ({ navigation }) => {
                   width: "90%",
                   height: "35%",
                   borderRadius: wp("2%"),
-                  borderWidth: wp("0.2%"),
+                  borderWidth: hp("0.2%"),
                   borderColor: colors.darkBlue,
                   backgroundColor: colors.light,
                   textAlign: "center",
@@ -157,7 +151,7 @@ const PassengerHomeScreen = ({ navigation }) => {
               />
             }
             title="کد پذیرنده راننده"
-            titleStyle={{ fontFamily: "Dirooz", fontSize: wp("4%"), color: colors.darkBlue }}
+            titleStyle={{ fontFamily: "Dirooz", fontSize: hp("2.2%"), color: colors.darkBlue }}
             closeOnTouchOutside={false}
             closeOnHardwareBackPress={false}
             showConfirmButton={true}
@@ -187,13 +181,13 @@ const PassengerHomeScreen = ({ navigation }) => {
             style={styles.codeStyle}
           >
             <AppButton width="75%" height="65%" borderRadius={wp("3%")} color="secondary" />
-            <AppText text="پرداخت با کد پذیرنده" size={wp("3.5%")} />
+            <AppText text="پرداخت با کد پذیرنده" size={hp("2%")} />
             <AppIcon family="MaterialCommunityIcons" name="cellphone-iphone" size={wp("7%")} style={styles.icon} />
           </TouchableOpacity>
         </View>
-        <View style={{ flex: 0.37 }} />
+        <View style={{ flex: 0.35 }} />
         <View style={styles.navigation}></View>
-      </View>
+      </SafeAreaView>
     </>
   );
 };
@@ -206,7 +200,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: colors["medium"],
+    backgroundColor: colors.medium,
   },
   header: {
     flex: 0.12,
@@ -215,6 +209,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light,
     paddingTop: StatusBar.currentHeight,
     flexDirection: "row",
+    shadowColor: colors.darkBlue,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 3,
   },
   buttons: {
     flex: 0.22,
