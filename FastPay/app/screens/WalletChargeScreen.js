@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, StatusBar, TouchableOpacity, TextInput } from "react-native";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { View, StyleSheet, StatusBar, TouchableOpacity, TextInput, Platform, SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import * as SQLite from "expo-sqlite";
 
 import AppButton from "../components/Button";
 import AppIcon from "../components/Icon";
 import AppText from "../components/Text";
-import HeaderCard from "../components/HeaderCard";
 import colors from "../config/colors";
-import PassengerNavigationMenu from "../components/PassengerNavigationMenu";
-import TransactionCard from "../components/TransactionCard";
 import db_queries from "../constants/db_queries";
+import HeaderCard from "../components/HeaderCard";
 import { manipulateData, fetchData } from "../functions/db_functions";
-import { toFarsiNumber, toEnglishNumber } from "../functions/helperFunctions";
-import storage_keys from "../constants/storage_keys";
 import { readData } from "../functions/storage_functions";
+import storage_keys from "../constants/storage_keys";
+import { toFarsiNumber, toEnglishNumber, trimMoney } from "../functions/helperFunctions";
 
 const TOOMAN = "  تومان";
 const db = SQLite.openDatabase("db.database"); // returns Database object
@@ -29,10 +27,10 @@ const WalletChargeScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     const grabData = async () => {
-      const data = await readData(AsyncStorage, storage_keys.PHONE_NUMBER);
-      const data2 = await fetchData(db, db_queries.GET_PASSENGER_ID_BY_PHONE_NUMBER, [data]);
-      setPassengerId(data2[0].passenger_id);
-      if (data !== null) setUserPhoneNumber(data);
+      const phone_number = await readData(AsyncStorage, storage_keys.PHONE_NUMBER);
+      const passenger_id = await fetchData(db, db_queries.GET_PASSENGER_ID_BY_PHONE_NUMBER, [phone_number]);
+      setPassengerId(passenger_id[0].passenger_id);
+      if (phone_number !== null) setUserPhoneNumber(phone_number);
 
       const today = new Date();
       const date =
@@ -54,10 +52,16 @@ const WalletChargeScreen = ({ navigation, route }) => {
 
   return (
     <>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        {Platform.OS === "android" ? <View style={{ flex: StatusBar.length, backgroundColor: colors.light }} /> : null}
         <View style={styles.header}>
           <HeaderCard width="100%" height="100%" />
-          <AppText text="افزایش اعتبار کیف پول" size={wp("4%")} color={colors.darkBlue} />
+          <AppText
+            text="افزایش اعتبار کیف پول"
+            size={hp("2.1%")}
+            color={colors.darkBlue}
+            style={{ bottom: hp("3.2%") }}
+          />
 
           <TouchableOpacity
             onPress={() => {
@@ -69,8 +73,8 @@ const WalletChargeScreen = ({ navigation, route }) => {
               family="Ionicons"
               name="arrow-back"
               color={colors.darkBlue}
-              size={wp("7%")}
-              style={{ position: "relative", marginRight: wp("80%"), marginTop: wp("2.5%") }}
+              size={hp("3.5%")}
+              style={{ position: "relative", marginRight: wp("80%"), marginTop: hp("2.5%") }}
             />
           </TouchableOpacity>
         </View>
@@ -78,7 +82,7 @@ const WalletChargeScreen = ({ navigation, route }) => {
         <View style={{ flex: 0.06 }} />
 
         <View style={styles.title}>
-          <AppText text="مبلغ مورد نظر خود را به تومان وارد کنید." size={wp("3.5%")} color={colors.darkBlue} />
+          <AppText text="مبلغ مورد نظر خود را به تومان وارد کنید." size={hp("1.8%")} color={colors.darkBlue} />
         </View>
 
         <View style={styles.buttons}>
@@ -88,8 +92,8 @@ const WalletChargeScreen = ({ navigation, route }) => {
               setValue("۵۰۰۰۰");
             }}
           >
-            <AppButton width={wp("23%")} height={wp("11%")} borderRadius={wp("8%")} color="secondary" />
-            <AppText text="۵۰٬۰۰۰ تومان" size={wp("2.8%")} />
+            <AppButton width={wp("23%")} height={hp("6%")} borderRadius={wp("8%")} color="secondary" />
+            <AppText text="۵۰٬۰۰۰ تومان" size={hp("1.5%")} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -98,8 +102,8 @@ const WalletChargeScreen = ({ navigation, route }) => {
               setValue("۲۵۰۰۰");
             }}
           >
-            <AppButton width={wp("23%")} height={wp("11%")} borderRadius={wp("8%")} color="secondary" />
-            <AppText text="۲۵٬۰۰۰ تومان" size={wp("2.8%")} />
+            <AppButton width={wp("23%")} height={hp("6%")} borderRadius={wp("8%")} color="secondary" />
+            <AppText text="۲۵٬۰۰۰ تومان" size={hp("1.5%")} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -108,20 +112,19 @@ const WalletChargeScreen = ({ navigation, route }) => {
               setValue("۱۰۰۰۰");
             }}
           >
-            <AppButton width={wp("23%")} height={wp("11%")} borderRadius={wp("8%")} color="secondary" />
-            <AppText text="۱۰٬۰۰۰ تومان" size={wp("2.8%")} />
+            <AppButton width={wp("23%")} height={hp("6%")} borderRadius={wp("8%")} color="secondary" />
+            <AppText text="۱۰٬۰۰۰ تومان" size={hp("1.5%")} />
           </TouchableOpacity>
         </View>
 
         <View style={{ flex: 0.04 }} />
         <View style={styles.input}>
           <TextInput
-            value={value + TOOMAN}
+            value={trimMoney(value) + TOOMAN}
             keyboardType="numeric"
+            selectionColor={colors.darkBlue}
             onKeyPress={({ nativeEvent: { key: keyValue } }) => {
-              console.log(keyValue);
               if (keyValue === "Backspace") {
-                // setValue("۰");
                 setValue(value.slice(0, value.length - 1));
               }
             }}
@@ -133,16 +136,17 @@ const WalletChargeScreen = ({ navigation, route }) => {
               width: "75%",
               height: "100%",
               borderRadius: wp("3%"),
-              borderWidth: wp("0.2%"),
+              borderWidth: hp("0.2%"),
               borderColor: colors.darkBlue,
               backgroundColor: colors.light,
               textAlign: "center",
+              fontSize: hp("2.5%"),
               color: colors.darkBlue,
               fontFamily: "Dirooz",
             }}
           />
         </View>
-        <View style={{ flex: 0.53 }} />
+        <View style={{ flex: 0.5 }} />
 
         <TouchableOpacity
           style={styles.button}
@@ -160,16 +164,17 @@ const WalletChargeScreen = ({ navigation, route }) => {
               date,
               null,
               null,
+              "True",
               passengerId,
               null,
             ]);
             navigation.navigate("PassengerHome");
           }}
         >
-          <AppButton width={wp("70%")} height="100%" borderRadius={wp("3.5%")} />
-          <AppText text="ادامه" size={wp("4.5%")} />
+          <AppButton width={wp("75%")} height="100%" borderRadius={wp("3.5%")} />
+          <AppText text="ادامه" size={hp("2.6%")} />
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     </>
   );
 };
@@ -177,9 +182,22 @@ const WalletChargeScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   button: {
     flex: 0.07,
+    width: wp("75%"),
+    height: "100%",
+    borderRadius: wp("3.5%"),
+    left: wp("12.5%"),
     bottom: wp("6%"),
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: colors.primary,
+    shadowColor: colors.darkBlue,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 3,
   },
   input: {
     flex: 0.08,
@@ -201,6 +219,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.light,
     paddingTop: StatusBar.currentHeight,
+    shadowColor: colors.darkBlue,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
   title: {
     flex: 0.07,
