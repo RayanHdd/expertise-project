@@ -33,18 +33,7 @@ const WalletChargeScreen = ({ navigation, route }) => {
       if (phone_number !== null) setUserPhoneNumber(phone_number);
 
       const today = new Date();
-      const date =
-        today.getFullYear() +
-        "-" +
-        (today.getMonth() + 1) +
-        "-" +
-        today.getDate() +
-        "-" +
-        today.getHours() +
-        "-" +
-        today.getMinutes() +
-        "-" +
-        today.getSeconds();
+      const date = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate() + "-" + today.getHours() + "-" + today.getMinutes() + "-" + today.getSeconds();
       setDate(date);
     };
     grabData().catch(console.error);
@@ -56,26 +45,15 @@ const WalletChargeScreen = ({ navigation, route }) => {
         {Platform.OS === "android" ? <View style={{ flex: StatusBar.length, backgroundColor: colors.light }} /> : null}
         <View style={styles.header}>
           <HeaderCard width="100%" height="100%" />
-          <AppText
-            text="افزایش اعتبار کیف پول"
-            size={hp("2.1%")}
-            color={colors.darkBlue}
-            style={{ bottom: hp("3.2%") }}
-          />
+          <AppText text="افزایش اعتبار کیف پول" size={hp("2.1%")} color={colors.darkBlue} style={{ bottom: hp("3.2%") }} />
 
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate("PassengerHome");
+              navigation.goBack();
             }}
             style={{ position: "absolute" }}
           >
-            <AppIcon
-              family="Ionicons"
-              name="arrow-back"
-              color={colors.darkBlue}
-              size={hp("3.5%")}
-              style={{ position: "relative", marginRight: wp("80%"), marginTop: hp("2.5%") }}
-            />
+            <AppIcon family="Ionicons" name="arrow-back" color={colors.darkBlue} size={hp("3.5%")} style={{ position: "relative", marginRight: wp("80%"), marginTop: hp("2.5%") }} />
           </TouchableOpacity>
         </View>
 
@@ -151,24 +129,22 @@ const WalletChargeScreen = ({ navigation, route }) => {
         <TouchableOpacity
           style={styles.button}
           onPress={() => {
-            manipulateData(
-              db,
-              db_queries.EDIT_PASSENGER_WALLET_CHARGE_BY_PHONE_NUMBER,
-              [parseInt(toEnglishNumber(value)) + parseInt(currentWalletCharge), userPhoneNumber],
-              "موجودی کیف پول به روز رسانی شد",
-              "خطا در به روز رسانی کیف پول"
-            );
-            manipulateData(db, db_queries.INSERT_TRANSACTION, [
-              "wallet",
-              parseInt(toEnglishNumber(value)),
-              date,
-              null,
-              null,
-              "True",
-              passengerId,
-              null,
-            ]);
-            navigation.navigate("PassengerHome");
+            if (toEnglishNumber(value) < 1000)
+              toast.show("مبلغ انتخابی باید حداقل ۱۰۰۰ تومان باشد", {
+                type: "normal",
+                duration: 3000,
+              });
+            else {
+              manipulateData(db, db_queries.EDIT_PASSENGER_WALLET_CHARGE_BY_PHONE_NUMBER, [parseInt(toEnglishNumber(value)) + parseInt(currentWalletCharge), userPhoneNumber], null, null);
+              manipulateData(
+                db,
+                db_queries.INSERT_TRANSACTION,
+                ["wallet", parseInt(toEnglishNumber(value)), date, null, null, 1, "True", passengerId, null],
+                "موجودی کیف پول به روز رسانی شد",
+                "خطا در به روز رسانی کیف پول"
+              );
+              navigation.navigate("PassengerHome");
+            }
           }}
         >
           <AppButton width={wp("75%")} height="100%" borderRadius={wp("3.5%")} />

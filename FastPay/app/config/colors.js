@@ -5,4 +5,5 @@ export default {
   medium: "#E9EAEC",
   black: "#000000",
   light: "#F2FFE9",
+  redTomato: "#ffa899",
 };

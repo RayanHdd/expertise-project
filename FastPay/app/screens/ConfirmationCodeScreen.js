@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Image, TouchableWithoutFeedback } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image, TouchableWithoutFeedback, SafeAreaView } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
-import { checkVerification } from "../api/verify";
-import OTPInputView from "@twotalltotems/react-native-otp-input";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import AwesomeAlert from "react-native-awesome-alerts";
+import OTPInputView from "@twotalltotems/react-native-otp-input";
+import * as SQLite from "expo-sqlite";
 
 import AppButton from "../components/Button";
 import AppText from "../components/Text";
 import colors from "../config/colors";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SQLite from "expo-sqlite";
-import storage_keys from "../constants/storage_keys";
-import { saveData } from "../functions/storage_functions";
 import db_queries from "../constants/db_queries";
 import { manipulateData } from "../functions/db_functions";
+import { saveData } from "../functions/storage_functions";
+import storage_keys from "../constants/storage_keys";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
 
 const ConfirmationCodeScreen = ({ route, navigation }) => {
-  const { phoneNumber } = route.params;
+  const { phoneNumber, confirmation_code } = route.params;
   const [invalidCode, setInvalidCode] = useState(true);
   const [showProgress, setShowProgress] = useState(false);
   const [focus, setFocus] = useState(false);
@@ -29,7 +28,7 @@ const ConfirmationCodeScreen = ({ route, navigation }) => {
 
   return (
     <>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={{ flex: 0.05 }} />
 
         <View style={styles.image}>
@@ -39,19 +38,18 @@ const ConfirmationCodeScreen = ({ route, navigation }) => {
         <View style={{ flex: 0.02 }} />
 
         <View style={styles.title}>
-          <AppText text="کد فعال سازی" size={wp("3%")} color={colors.darkBlue} style={{ right: wp("15%") }} />
+          <AppText text="کد فعال سازی" size={hp("1.6%")} color={colors.darkBlue} style={{ right: wp("15%") }} />
         </View>
 
         <AwesomeAlert
           show={showProgress}
-          showProgress={true}
+          showProgress
           progressSize={wp("5%")}
           progressColor={colors.darkBlue}
           title="در حال انجام..."
-          titleStyle={{ fontFamily: "Dirooz", fontSize: wp("3%"), color: colors.darkBlue }}
+          titleStyle={{ fontFamily: "Dirooz", fontSize: hp("1.6%"), color: colors.darkBlue }}
           closeOnTouchOutside={false}
           closeOnHardwareBackPress={false}
-          alertContainerStyle={{ color: colors.light }}
         />
 
         <View style={styles.input}>
@@ -64,47 +62,33 @@ const ConfirmationCodeScreen = ({ route, navigation }) => {
               borderRadius: wp("2%"),
               padding: wp("2%"),
             }}
-            pinCount={6}
+            pinCount={5}
             autoFocusOnLoad={focus}
+            keyboardType="default"
+            selectionColor={colors.darkBlue}
             codeInputFieldStyle={styles.underlineStyleBase}
             codeInputHighlightStyle={styles.underlineStyleHighLighted}
             onCodeFilled={(code) => {
-              console.log(`Code is ${code}, you are good to go!`);
-              setShowProgress(true);
-              checkVerification(phoneNumber, code).then((success) => {
-                console.log(success);
-                setShowProgress(false);
-                if (!success) {
-                  setInvalidCode(true);
-                  toast.show("کد اشتباه است", {
-                    type: "normal",
-                    duration: 3000,
-                  });
-                } else {
-                  setInvalidCode(false);
-                  manipulateData(
-                    db,
-                    db_queries.INSERT_PASSENGER,
-                    [phoneNumber],
-                    "حساب با موفقیت ساخته شد",
-                    "خطا در ساخت حساب"
-                  );
-                  saveData(AsyncStorage, storage_keys.IS_SIGNED_UP, "True");
-                  saveData(AsyncStorage, storage_keys.PHONE_NUMBER, phoneNumber);
-                  navigation.replace("Tabs");
-                }
-              });
+              setShowProgress(false);
+              if (code !== confirmation_code) {
+                setInvalidCode(true);
+                toast.show("کد اشتباه است", {
+                  type: "normal",
+                  duration: 3000,
+                });
+              } else {
+                setInvalidCode(false);
+                manipulateData(db, db_queries.INSERT_PASSENGER, [phoneNumber], "حساب با موفقیت ساخته شد", "خطا در ساخت حساب");
+                saveData(AsyncStorage, storage_keys.IS_SIGNED_UP, "True");
+                saveData(AsyncStorage, storage_keys.PHONE_NUMBER, phoneNumber);
+                navigation.replace("Tabs");
+              }
             }}
           />
         </View>
 
         <View style={styles.subtitle}>
-          <AppText
-            text={"کد فعال سازی برای شماره " + phoneNumber.substr(1) + " " + "ارسال شد!"}
-            size={wp("2.5%")}
-            color={colors.secondary}
-            style={{ right: wp("15%") }}
-          />
+          <AppText text={"کد فعال سازی برای شماره " + "0" + phoneNumber.substr(3) + " " + "ارسال شد!"} size={hp("1.4%")} color={colors.secondary} style={{ right: wp("15%") }} />
         </View>
 
         <View style={{ flex: 0.04 }} />
@@ -117,6 +101,9 @@ const ConfirmationCodeScreen = ({ route, navigation }) => {
                 duration: 3000,
               });
             } else {
+              manipulateData(db, db_queries.INSERT_PASSENGER, [phoneNumber], "حساب با موفقیت ساخته شد", "خطا در ساخت حساب");
+              saveData(AsyncStorage, storage_keys.IS_SIGNED_UP, "True");
+              saveData(AsyncStorage, storage_keys.PHONE_NUMBER, phoneNumber);
               navigation.replace("Tabs");
             }
           }}
@@ -124,30 +111,25 @@ const ConfirmationCodeScreen = ({ route, navigation }) => {
         >
           <AppButton
             borderRadius={wp("3%")}
-            width={wp("60%")}
+            width={wp("65%")}
             height="100%"
             style={{
               position: "absolute",
             }}
           />
-          <AppText text="تایید" color={colors.darkBlue} size={wp("4.2%")} style={{ right: wp("26%") }} />
+          <AppText text="تایید" color={colors.darkBlue} size={hp("2.5%")} style={{ textAlign: "center" }} />
         </TouchableOpacity>
 
         <View style={{ flex: 0.03 }} />
 
         <TouchableWithoutFeedback onPress={() => navigation.replace("Signup")}>
           <View style={styles.footer}>
-            <AppText
-              text="تغییر شماره همراه"
-              color={colors.secondary}
-              size={wp("3.6%")}
-              style={{ textDecorationLine: "underline" }}
-            />
+            <AppText text="تغییر شماره همراه" color={colors.secondary} size={hp("2%")} style={{ textDecorationLine: "underline" }} />
           </View>
         </TouchableWithoutFeedback>
 
         <View style={{ flex: 0.37 }} />
-      </View>
+      </SafeAreaView>
     </>
   );
 };
@@ -159,7 +141,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.medium,
     borderRadius: wp("3%"),
-    width: wp("60%"),
+    width: wp("65%"),
     alignSelf: "center",
     shadowColor: colors.darkBlue,
     shadowOffset: {
@@ -199,12 +181,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   underlineStyleBase: {
-    width: 30,
-    height: 45,
+    width: wp("8%"),
+    height: hp("5%"),
     borderWidth: 0,
     borderBottomWidth: wp("0.5%"),
     color: colors.darkBlue,
-    fontSize: wp("4%"),
+    fontSize: hp("2.4%"),
     fontWeight: "600",
   },
   underlineStyleHighLighted: {

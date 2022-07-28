@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, StatusBar, TextInput, Image, Platform, SafeAreaView } from "react-native";
+import { View, StyleSheet, TouchableOpacity, StatusBar, TextInput, Image, Platform, SafeAreaView, Keyboard } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AwesomeAlert from "react-native-awesome-alerts";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
@@ -14,7 +14,7 @@ import { fetchData } from "../functions/db_functions";
 import HeaderCard from "../components/HeaderCard";
 import { readDataAsync } from "../functions/storage_functions";
 import storage_keys from "../constants/storage_keys";
-import { toFarsiNumber, trimMoney } from "../functions/helperFunctions";
+import { toEnglishNumber, toFarsiNumber, trimMoney } from "../functions/helperFunctions";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
 
@@ -41,9 +41,30 @@ const PassengerHomeScreen = ({ navigation }) => {
     return onRefresh;
   }, [navigation]);
 
-  const hideAlert = () => {
-    setShowAlert(false);
-    setConfirmationCode(null);
+  const ifCodeExists = async () => {
+    if (confirmationCode === null || confirmationCode.length !== 6) {
+      Keyboard.dismiss();
+      toast.show("کد پذیرنده باید ۶ رقمی باشد", {
+        type: "normal",
+        duration: 3000,
+      });
+    } else {
+      const data = await fetchData(db, db_queries.CHECK_IF_CODE_EXISTS, [toEnglishNumber(confirmationCode)]);
+      if (Object.values(data[0])[0] === 0) {
+        Keyboard.dismiss();
+        toast.show("کد وارد شده موجود نیست", {
+          type: "normal",
+          duration: 3000,
+        });
+      } else {
+        setShowAlert(false);
+        navigation.navigate("Payment", {
+          acceptor_code: confirmationCode,
+          wallet_charge: walletCharge,
+          passenger_phone: userPhoneNumber,
+        });
+      }
+    }
   };
 
   return (
@@ -58,17 +79,12 @@ const PassengerHomeScreen = ({ navigation }) => {
               uri: imageUri,
             }}
           />
-          <AppText
-            text="موجودی کیف پول :"
-            size={hp("1.9%")}
-            color={colors.secondary}
-            style={{ right: "25%", marginBottom: "8%" }}
-          />
+          <AppText text="موجودی کیف پول :" size={hp("1.9%")} color={colors.secondary} style={{ right: "25%", marginBottom: "8%" }} />
           <AppText
             text={trimMoney(toFarsiNumber(walletCharge)) + " تومان"}
             size={hp("2.4%")}
-            color={colors.darkBlue}
-            style={{ right: "25%", top: hp("7.2%") }}
+            color={parseInt(walletCharge) < 2000 ? "red" : colors.darkBlue}
+            style={{ right: "25%", top: hp("7.5%") }}
           />
 
           <TouchableOpacity
@@ -85,15 +101,10 @@ const PassengerHomeScreen = ({ navigation }) => {
               borderRadius={wp("2.5%")}
               style={{
                 marginRight: wp("75%"),
+                top: hp("0.7%"),
               }}
             />
-            <AppIcon
-              family="MaterialCommunityIcons"
-              name="plus"
-              color={colors.darkBlue}
-              size={hp("3.8%")}
-              style={{ left: wp("2.1%"), top: hp("1%") }}
-            />
+            <AppIcon family="MaterialCommunityIcons" name="plus" color={colors.darkBlue} size={hp("3.8%")} style={{ left: hp("1.2%"), top: hp("1.6%") }} />
           </TouchableOpacity>
         </View>
         <View style={{ flex: 0.05 }} />
@@ -109,13 +120,7 @@ const PassengerHomeScreen = ({ navigation }) => {
           >
             <AppButton width="75%" height="65%" borderRadius={wp("3%")} />
             <AppText text="پرداخت با اسکن بارکد" size={hp("2%")} color={colors.darkBlue} />
-            <AppIcon
-              family="MaterialCommunityIcons"
-              name="qrcode-scan"
-              color={colors.darkBlue}
-              size={wp("6.5%")}
-              style={styles.icon}
-            />
+            <AppIcon family="MaterialCommunityIcons" name="qrcode-scan" color={colors.darkBlue} size={wp("6.5%")} style={styles.icon} />
           </TouchableOpacity>
 
           <AwesomeAlert
@@ -143,10 +148,9 @@ const PassengerHomeScreen = ({ navigation }) => {
                   borderColor: colors.darkBlue,
                   backgroundColor: colors.light,
                   textAlign: "center",
-                  fontSize: wp("5%"),
-                  color: colors.darkBlue,
-                  fontFamily: "Dirooz",
                   marginTop: wp("4%"),
+                  fontFamily: "Dirooz",
+                  fontSize: hp("2.5%"),
                 }}
               />
             }
@@ -156,21 +160,20 @@ const PassengerHomeScreen = ({ navigation }) => {
             closeOnHardwareBackPress={false}
             showConfirmButton={true}
             showCancelButton={true}
-            cancelText={<AppText size={wp("4.5%")} text="انصراف" color={colors.darkBlue} />}
-            confirmText={<AppText size={wp("4.5%")} text="تایید" color="white" />}
-            alertContainerStyle={{ color: colors.light }}
+            cancelText="انصراف"
+            confirmText="تایید"
+            confirmButtonTextStyle={{ fontSize: hp("2.2%"), fontFamily: "Dirooz", color: "white" }}
+            cancelButtonTextStyle={{ fontSize: hp("2.2%"), fontFamily: "Dirooz", color: colors.darkBlue }}
             contentContainerStyle={{ width: wp("70%"), height: hp("35%") }}
             cancelButtonStyle={{ marginRight: wp("5%") }}
             confirmButtonColor={colors.darkBlue}
             cancelButtonColor={colors.medium}
-            onCancelPressed={hideAlert}
+            onCancelPressed={() => {
+              setShowAlert(false);
+              setConfirmationCode(null);
+            }}
             onConfirmPressed={() => {
-              hideAlert();
-              navigation.navigate("Payment", {
-                acceptor_code: confirmationCode,
-                wallet_charge: walletCharge,
-                passenger_phone: userPhoneNumber,
-              });
+              ifCodeExists();
             }}
           />
 

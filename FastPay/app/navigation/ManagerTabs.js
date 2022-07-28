@@ -1,18 +1,18 @@
 import React, { useEffect } from "react";
-import { StyleSheet, View, Image, BackHandler } from "react-native";
+import { StyleSheet, View, BackHandler } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 import AppIcon from "../components/Icon";
 import AppText from "../components/Text";
 import colors from "../config/colors";
-import PassengerHomeScreen from "../screens/PassengerHomeScreen";
-import SettingsScreen from "../screens/SettingsScreen";
-import TransactionsScreen from "../screens/TransactionsScreen";
+import ManagerDriversScreen from "../screens/ManagerDriversScreen";
+import ManagerHomeScreen from "../screens/ManagerHomeScreen";
+import ManagerTransactionsScreen from "../screens/ManagerTransactionsScreen";
 
 const Tab = createBottomTabNavigator();
 
-const Tabs = () => {
+const ManagerTabs = () => {
   useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => true);
     return () => backHandler.remove();
@@ -20,7 +20,7 @@ const Tabs = () => {
 
   return (
     <Tab.Navigator
-      initialRouteName="PassengerHome"
+      initialRouteName="ManagerHome"
       screenOptions={{
         tabBarShowLabel: false,
         tabBarStyle: {
@@ -38,51 +38,57 @@ const Tabs = () => {
       }}
     >
       <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
+        name="ManagerDrivers"
+        component={ManagerDriversScreen}
         options={{
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <View style={{ alignItems: "center", justifyContent: "center", top: wp("-2%") }}>
-              <AppIcon family="MaterialIcons" name="settings" size={hp("3.8%")} color={focused ? colors.darkBlue : colors.secondary} style={{}} />
-              <AppText text="تنظیمات" size={hp("1.7%")} color={focused ? colors.darkBlue : colors.secondary} style={{ top: hp("1.7%") }} />
+            <View style={{ alignItems: "center", justifyContent: "center", top: hp("-1%") }}>
+              <AppIcon
+                family="MaterialCommunityIcons"
+                name="card-account-details-outline"
+                size={hp("4%")}
+                color={focused ? colors.darkBlue : colors.secondary}
+                style={{ top: hp("-2.5%") }}
+              />
+              <AppText text="راننده ها" size={hp("1.9%")} color={focused ? colors.darkBlue : colors.secondary} style={{ top: hp("1%") }} />
             </View>
           ),
         }}
       />
       <Tab.Screen
-        name="PassengerHome"
-        component={PassengerHomeScreen}
+        name="ManagerHome"
+        component={ManagerHomeScreen}
         options={{
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <View style={{ alignItems: "center", justifyContent: "center", top: wp("-1.7%") }}>
+            <View style={{ alignItems: "center", justifyContent: "center", top: hp("0.5%") }}>
               <View style={[styles.taxiIcon, { borderColor: focused ? colors.darkBlue : colors.secondary }]}></View>
-              <AppText text="کرایه" size={wp("3%")} color={focused ? colors.darkBlue : colors.secondary} style={{ bottom: wp("12%") }} />
-              <Image
-                source={require("../assets/images/taxi.png")}
+              <AppIcon
+                family="AntDesign"
+                name="home"
+                color={colors.darkBlue}
+                size={hp("4.5%")}
                 style={{
-                  width: wp("7.5%"),
-                  height: wp("7.5%"),
-                  bottom: wp("4.5%"),
+                  bottom: hp("3%"),
                   opacity: focused ? 1.5 : 0.45,
                 }}
               />
               <View style={styles.border}></View>
-              <AppText text="پرداخت" size={hp("1.8%")} color={focused ? colors.darkBlue : colors.secondary} style={{ bottom: hp("-3%") }} />
+              <AppText text="خانه" size={hp("2.3%")} color={focused ? colors.darkBlue : colors.secondary} style={{ bottom: hp("-4.2%") }} />
             </View>
           ),
         }}
       />
       <Tab.Screen
-        name="Transactions"
-        component={TransactionsScreen}
+        name="ManagerTransactions"
+        component={ManagerTransactionsScreen}
         options={{
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <View style={{ alignItems: "center", justifyContent: "center", top: wp("-2%") }}>
-              <AppIcon family="FontAwesome5" name="money-check" size={hp("3.2%")} color={focused ? colors.darkBlue : colors.secondary} style={{}} />
-              <AppText text="تراکنش ها" size={hp("1.7%")} color={focused ? colors.darkBlue : colors.secondary} style={{ top: hp("1.7%") }} />
+            <View style={{ alignItems: "center", justifyContent: "center", top: wp("-1.5%") }}>
+              <AppIcon family="FontAwesome5" name="money-check" size={hp("3.3%")} color={focused ? colors.darkBlue : colors.secondary} style={{ top: hp("-2.5") }} />
+              <AppText text="تراکنش ها" size={hp("1.8%")} color={focused ? colors.darkBlue : colors.secondary} style={{ top: hp("1%") }} />
             </View>
           ),
         }}
@@ -123,4 +129,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Tabs;
+export default ManagerTabs;

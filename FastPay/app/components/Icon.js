@@ -10,12 +10,21 @@ import {
   Ionicons,
   Fontisto,
   AntDesign,
+  Foundation,
+  EvilIcons,
+  Octicons,
 } from "@expo/vector-icons";
 
 function AppIcon({ family, name, size, color = "black", style }) {
   switch (family) {
     case "Ionicons":
       return <Ionicons name={name} color={color} size={size} style={[{ position: "absolute" }, style]} />;
+    case "Octicons":
+      return <Octicons name={name} color={color} size={size} style={[{ position: "absolute" }, style]} />;
+    case "EvilIcons":
+      return <EvilIcons name={name} color={color} size={size} style={[{ position: "absolute" }, style]} />;
+    case "Foundation":
+      return <Foundation name={name} color={color} size={size} style={[{ position: "absolute" }, style]} />;
     case "AntDesign":
       return <AntDesign name={name} color={color} size={size} style={[{ position: "absolute" }, style]} />;
     case "Fontisto":

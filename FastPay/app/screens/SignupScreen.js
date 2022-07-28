@@ -1,16 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  TouchableWithoutFeedback,
-  TextInput,
-  Animated,
-  StatusBar,
-  Platform,
-  SafeAreaView,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image, TouchableWithoutFeedback, TextInput, Animated, StatusBar, Platform, SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AwesomeAlert from "react-native-awesome-alerts";
 import PhoneInput from "react-native-phone-number-input";
@@ -24,7 +13,7 @@ import colors from "../config/colors";
 import db_queries from "../constants/db_queries";
 import { fetchData } from "../functions/db_functions";
 import { saveData } from "../functions/storage_functions";
-import { sendSmsVerification } from "../api/verify";
+import { sendVerificationCode } from "../api/sendSMS";
 import storage_keys from "../constants/storage_keys";
 
 const db = SQLite.openDatabase("db.database"); // returns Database object
@@ -53,31 +42,44 @@ const SignupScreen = ({ navigation }) => {
 
   const ifRecordExists = async () => {
     if (managerUsername === "" && managerPassword === "") {
-      const data = await fetchData(db, db_queries.CHECK_IF_DRIVER_EXISTS, [username, password]);
-      if (Object.values(data[0])[0] === 0) {
-        toast.show("نام کاربری و/یا رمز عبور اشتباه است", {
+      if (username === null || username.length === 0 || password === null || password.length === 0)
+        toast.show("لطفا موارد خواسته شده را وارد کنید", {
           type: "normal",
           duration: 3000,
         });
-      } else {
-        if (checkMark) saveData(AsyncStorage, storage_keys.IS_DRIVER_LOGGED_IN, "True");
-        const driverInfo = await fetchData(db, db_queries.FETCH_DRIVER_INFO_BY_USERNAME_AND_PASSWORD, [
-          username,
-          password,
-        ]);
-        saveData(AsyncStorage, storage_keys.DRIVER_ID, driverInfo[0].driver_id.toString());
-        navigation.navigate("DriverHome");
+      else {
+        const data = await fetchData(db, db_queries.CHECK_IF_DRIVER_EXISTS, [username, password]);
+        if (Object.values(data[0])[0] === 0) {
+          toast.show("نام کاربری و/یا رمز عبور اشتباه است", {
+            type: "normal",
+            duration: 3000,
+          });
+        } else {
+          if (checkMark) saveData(AsyncStorage, storage_keys.IS_DRIVER_LOGGED_IN, "True");
+          const driverInfo = await fetchData(db, db_queries.FETCH_DRIVER_INFO_BY_USERNAME_AND_PASSWORD, [username, password]);
+          saveData(AsyncStorage, storage_keys.DRIVER_ID, driverInfo[0].driver_id.toString());
+          navigation.navigate("DriverHome");
+        }
       }
     } else if (username === "" && password === "") {
-      const data = await fetchData(db, db_queries.CHECK_IF_MANAGER_EXISTS, [managerUsername, managerPassword]);
-      if (Object.values(data[0])[0] === 0) {
-        toast.show("نام کاربری و/یا رمز عبور اشتباه است", {
+      if (managerUsername === null || managerUsername.length === 0 || managerPassword === null || managerPassword.length === 0)
+        toast.show("لطفا موارد خواسته شده را وارد کنید", {
           type: "normal",
           duration: 3000,
         });
-      } else {
-        if (checkMark) saveData(AsyncStorage, storage_keys.IS_MANAGER_LOGGED_IN, "True");
-        navigation.navigate("ManagerTabs");
+      else {
+        const data = await fetchData(db, db_queries.CHECK_IF_MANAGER_EXISTS, [managerUsername, managerPassword]);
+        if (Object.values(data[0])[0] === 0) {
+          toast.show("نام کاربری و/یا رمز عبور اشتباه است", {
+            type: "normal",
+            duration: 3000,
+          });
+        } else {
+          if (checkMark) saveData(AsyncStorage, storage_keys.IS_MANAGER_LOGGED_IN, "True");
+          const managerInfo = await fetchData(db, db_queries.FETCH_MANAGER_INFO_BY_USERNAME_AND_PASSWORD, [managerUsername, managerPassword]);
+          saveData(AsyncStorage, storage_keys.MANAGER_ID, managerInfo[0].manager_id.toString());
+          navigation.navigate("ManagerTabs");
+        }
       }
     }
   };
@@ -86,7 +88,15 @@ const SignupScreen = ({ navigation }) => {
     const data = await fetchData(db, db_queries.CHECK_IF_PASSENGER_EXISTS, [formattedValue]);
     if (Object.values(data[0])[0] === 1) {
       saveData(AsyncStorage, storage_keys.IS_SIGNED_UP, "True");
-      navigation.navigate("Tabs");
+      saveData(AsyncStorage, storage_keys.PHONE_NUMBER, formattedValue);
+      setShowProgress(false);
+      navigation.replace("Tabs");
+    } else {
+      sendVerificationCode("0" + formattedValue.substring(3)).then((sent) => {
+        setShowProgress(false);
+        console.log("Sent!", sent);
+        navigation.navigate("ConfirmationCode", { phoneNumber: formattedValue, confirmation_code: sent });
+      });
     }
   };
 
@@ -104,11 +114,7 @@ const SignupScreen = ({ navigation }) => {
   return (
     <>
       <SafeAreaView style={styles.container}>
-        {Platform.OS === "android" ? (
-          <View style={{ flex: StatusBar.length + 0.04 }} />
-        ) : (
-          <View style={{ flex: 0.04 }} />
-        )}
+        {Platform.OS === "android" ? <View style={{ flex: StatusBar.length + 0.04 }} /> : <View style={{ flex: 0.04 }} />}
 
         <View style={styles.image}>
           <Image style={{ width: "70%", height: "100%" }} source={require("../assets/images/logo.png")} />
@@ -144,18 +150,8 @@ const SignupScreen = ({ navigation }) => {
               }}
             >
               <AppButton width="100%" height="100%" borderRadius={wp("2%")} />
-              <AppText
-                text="مسافر"
-                size={hp("1.8%")}
-                color={colors.darkBlue}
-                style={{ left: wp("4%"), top: hp("7%") }}
-              />
-              <AppIcon
-                family="MaterialCommunityIcons"
-                name="seat-passenger"
-                size={wp("8%")}
-                style={{ left: wp("4.8%") }}
-              />
+              <AppText text="مسافر" size={hp("1.8%")} color={colors.darkBlue} style={{ left: wp("3.6%"), top: hp("7%") }} />
+              <AppIcon family="MaterialCommunityIcons" name="seat-passenger" size={wp("8%")} style={{ left: wp("4.8%") }} />
             </View>
           </TouchableWithoutFeedback>
 
@@ -181,12 +177,7 @@ const SignupScreen = ({ navigation }) => {
               }}
             >
               <AppButton width="100%" height="100%" borderRadius={wp("2%")} />
-              <AppText
-                text="راننده"
-                size={hp("1.9%")}
-                color={colors.darkBlue}
-                style={{ left: wp("4.4%"), top: hp("7%") }}
-              />
+              <AppText text="راننده" size={hp("1.9%")} color={colors.darkBlue} style={{ left: wp("4.1%"), top: hp("7%") }} />
               <AppIcon family="MaterialCommunityIcons" name="taxi" size={wp("8%")} style={{ left: wp("4.5%") }} />
             </View>
           </TouchableWithoutFeedback>
@@ -213,12 +204,7 @@ const SignupScreen = ({ navigation }) => {
               }}
             >
               <AppButton width="100%" height="100%" borderRadius={wp("2%")} />
-              <AppText
-                text="مدیر"
-                size={hp("1.9%")}
-                color={colors.darkBlue}
-                style={{ left: wp("5%"), top: hp("7%") }}
-              />
+              <AppText text="مدیر" size={hp("1.9%")} color={colors.darkBlue} style={{ left: wp("5%"), top: hp("7%") }} />
               <AppIcon family="Fontisto" name="person" size={wp("6%")} style={{ left: wp("5.8%") }} />
             </View>
           </TouchableWithoutFeedback>
@@ -253,7 +239,7 @@ const SignupScreen = ({ navigation }) => {
                   height: "55%",
                   borderRadius: wp("2%"),
                   backgroundColor: "white",
-                  padding: wp("3.2%"),
+                  padding: hp("1.6%"),
                   borderWidth: hp("0.2%"),
                   borderColor: colors.darkBlue,
                   transform: [
@@ -283,7 +269,7 @@ const SignupScreen = ({ navigation }) => {
                   style={{
                     textAlignVertical: "top",
                     textAlign: "right",
-                    fontSize: wp("3.8%"),
+                    fontSize: hp("2%"),
                     color: colors.darkBlue,
                     fontFamily: "Dirooz",
                   }}
@@ -315,7 +301,7 @@ const SignupScreen = ({ navigation }) => {
                   height: "55%",
                   borderRadius: wp("2%"),
                   backgroundColor: "white",
-                  padding: wp("3.2%"),
+                  padding: hp("1.6%"),
                   borderWidth: hp("0.2%"),
                   borderColor: colors.darkBlue,
                   transform: [
@@ -346,7 +332,7 @@ const SignupScreen = ({ navigation }) => {
                   style={{
                     textAlignVertical: "top",
                     textAlign: "right",
-                    fontSize: wp("3.8%"),
+                    fontSize: hp("2%"),
                     color: colors.darkBlue,
                     fontFamily: "Dirooz",
                   }}
@@ -379,21 +365,13 @@ const SignupScreen = ({ navigation }) => {
                     ],
                   }}
                 ></Animated.View>
-                {checkMark ? (
-                  <AppIcon
-                    family="Entypo"
-                    name="check"
-                    color={colors.darkBlue}
-                    size={hp("3.2%")}
-                    style={{ right: wp("16.3%") }}
-                  />
-                ) : null}
+                {checkMark ? <AppIcon family="Entypo" name="check" color={colors.darkBlue} size={hp("3%")} style={{ right: wp("16.3%") }} /> : null}
 
                 <Animated.View
                   style={{
                     position: "absolute",
-                    right: wp("43%"),
-                    bottom: hp("2.7%"),
+                    right: wp("44%"),
+                    bottom: hp("2.4%"),
                     transform: [
                       {
                         translateX: animatedValue.interpolate({
@@ -404,12 +382,7 @@ const SignupScreen = ({ navigation }) => {
                     ],
                   }}
                 >
-                  <AppText
-                    text="ذخیره اطلاعات"
-                    color={colors.secondary}
-                    size={wp("3.2%")}
-                    style={{ textDecorationLine: "underline" }}
-                  />
+                  <AppText text="ذخیره اطلاعات" color={colors.secondary} size={hp("1.6%")} style={{ textDecorationLine: "underline" }} />
                 </Animated.View>
               </View>
             </TouchableWithoutFeedback>
@@ -499,7 +472,7 @@ const SignupScreen = ({ navigation }) => {
                   ],
                 }}
               >
-                <AppText text="ورود" color={colors.darkBlue} size={hp("3%")} />
+                <AppText text="ورود" color={colors.darkBlue} size={hp("3%")} style={{ position: "relative", top: hp("4.8%"), left: wp("8%") }} />
               </Animated.View>
             </TouchableOpacity>
             <View style={{ flex: 0.18 }} />
@@ -507,12 +480,7 @@ const SignupScreen = ({ navigation }) => {
         ) : (
           <>
             <View style={styles.input}>
-              <AppText
-                text="شماره تلفن همراه"
-                size={wp("3.5%")}
-                color={colors.darkBlue}
-                style={{ right: wp("16%"), bottom: hp("12%") }}
-              />
+              <AppText text="شماره تلفن همراه" size={hp("2%")} color={colors.darkBlue} style={{ right: wp("16%"), bottom: hp("12%") }} />
               <PhoneInput
                 ref={phoneInput}
                 defaultValue={null}
@@ -547,12 +515,7 @@ const SignupScreen = ({ navigation }) => {
 
             <TouchableWithoutFeedback onPress={activeAlert}>
               <View style={styles.subtitle}>
-                <AppText
-                  text="قوانین و مقررات"
-                  color={colors.secondary}
-                  size={wp("3%")}
-                  style={{ textDecorationLine: "underline" }}
-                />
+                <AppText text="قوانین و مقررات" color={colors.secondary} size={hp("1.6%")} style={{ textDecorationLine: "underline" }} />
               </View>
             </TouchableWithoutFeedback>
 
@@ -560,11 +523,11 @@ const SignupScreen = ({ navigation }) => {
               show={showAlert}
               showProgress={false}
               title="قوانین و مقررات برنامه"
-              titleStyle={{ fontFamily: "Dirooz", fontSize: wp("4%"), color: colors.darkBlue }}
+              titleStyle={{ fontFamily: "Dirooz", fontSize: hp("2.2%"), color: colors.darkBlue }}
               message="هنوز تعیین نشده است..."
               messageStyle={{
                 fontFamily: "Dirooz",
-                fontSize: wp("3%"),
+                fontSize: hp("1.7%"),
                 color: colors.secondary,
                 alignSelf: "flex-end",
               }}
@@ -572,6 +535,7 @@ const SignupScreen = ({ navigation }) => {
               closeOnHardwareBackPress={false}
               showConfirmButton={true}
               confirmText="تایید"
+              confirmButtonTextStyle={{ fontFamily: "Dirooz", fontSize: hp("2%") }}
               alertContainerStyle={{ color: colors.light }}
               confirmButtonColor={colors.darkBlue}
               onConfirmPressed={hideAlert}
@@ -598,11 +562,6 @@ const SignupScreen = ({ navigation }) => {
                 const checkValid = phoneInput.current?.isValidNumber(value);
                 if (checkValid) {
                   ifPassengerExists();
-                  sendSmsVerification(formattedValue).then((sent) => {
-                    setShowProgress(false);
-                    console.log("Sent!", sent);
-                    navigation.navigate("ConfirmationCode", { phoneNumber: formattedValue });
-                  });
                 } else {
                   setShowProgress(false);
                   toast.show("شماره نامعتبر است", {
@@ -620,7 +579,7 @@ const SignupScreen = ({ navigation }) => {
                   position: "absolute",
                 }}
               />
-              <AppText text="ادامه" color={colors.darkBlue} size={hp("3%")} style={{ right: wp("28%") }} />
+              <AppText text="ادامه" color={colors.darkBlue} size={hp("3%")} style={{ textAlign: "center" }} />
             </TouchableOpacity>
 
             <View style={{ flex: 0.32 }} />

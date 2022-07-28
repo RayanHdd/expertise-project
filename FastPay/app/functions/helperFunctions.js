@@ -1,4 +1,27 @@
+export const convertToFarsiNumber = (number) => {
+  //number is a float number
+  //convert float english number to float farsi number (ex: 1.5 => ١٫٥) and return it as string (ex: "١٫٥")
+  const farsiDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+
+  const numberString = number.toString();
+  const numberArray = numberString.split(".");
+  const integerPart = numberArray[0];
+  const decimalPart = numberArray[1];
+  let result = "";
+  for (let i = 0; i < integerPart.length; i++) {
+    result += farsiDigits[integerPart[i]];
+  }
+  if (decimalPart) {
+    result += ",";
+    for (let i = 0; i < decimalPart.length; i++) {
+      result += farsiDigits[decimalPart[i]];
+    }
+  }
+  return result;
+};
+
 export const toFarsiNumber = (number) => {
+  if (number === null || number === "") return "";
   const farsiDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 
   return number
@@ -60,14 +83,7 @@ export const gregorian_to_jalali = (gy, gm, gd) => {
     gy -= 621;
   }
   gy2 = gm > 2 ? gy + 1 : gy;
-  days =
-    365 * gy +
-    parseInt((gy2 + 3) / 4) -
-    parseInt((gy2 + 99) / 100) +
-    parseInt((gy2 + 399) / 400) -
-    80 +
-    gd +
-    g_d_m[gm - 1];
+  days = 365 * gy + parseInt((gy2 + 3) / 4) - parseInt((gy2 + 99) / 100) + parseInt((gy2 + 399) / 400) - 80 + gd + g_d_m[gm - 1];
   jy += 33 * parseInt(days / 12053);
   days %= 12053;
   jy += 4 * parseInt(days / 1461);
@@ -137,8 +153,7 @@ export const jalali_to_gregorian = (myDate) => {
       g_day_no = g_day_no % 365;
     }
 
-    for (var i = 0; g_day_no >= JalaliDate.g_days_in_month[i] + (i == 1 && leap); i++)
-      g_day_no -= JalaliDate.g_days_in_month[i] + (i == 1 && leap);
+    for (var i = 0; g_day_no >= JalaliDate.g_days_in_month[i] + (i == 1 && leap); i++) g_day_no -= JalaliDate.g_days_in_month[i] + (i == 1 && leap);
     var gm = i + 1;
     var gd = g_day_no + 1;
 
@@ -153,4 +168,31 @@ export const jalali_to_gregorian = (myDate) => {
   jResult = jD[0] + "-" + jD[1] + "-" + jD[2];
 
   return jResult;
+};
+
+export const dateTimeComparison = (date1, date2) => {
+  const expand1 = date1.split("-");
+  const expand2 = date2.split("-");
+  for (var i = 0; i < expand1.length; i++) {
+    if (expand1[i].length < 2) {
+      expand1[i] = "0" + expand1[i];
+    }
+  }
+  for (var i = 0; i < expand2.length; i++) {
+    if (expand2[i].length < 2) {
+      expand2[i] = "0" + expand2[i];
+    }
+  }
+  if (expand1.join("-") <= expand2.join("-")) {
+    return "SMALLER";
+  } else if (expand1.join("-") >= expand2.join("-")) {
+    return "BIGGER";
+  }
+};
+
+export const toFarsiDigits = (str) => {
+  return str.replace(/[0-9]/g, function (w) {
+    var persian = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+    return persian[w];
+  });
 };

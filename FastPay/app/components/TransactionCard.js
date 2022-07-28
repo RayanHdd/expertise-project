@@ -1,24 +1,12 @@
 import React from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
-import colors from "../config/colors";
 import AppIcon from "./Icon";
 import AppText from "./Text";
+import colors from "../config/colors";
 
-function TransactionCard({
-  width,
-  height,
-  borderRadius,
-  title,
-  date,
-  time,
-  price,
-  type,
-  iconType,
-  iconUrl = null,
-  style,
-}) {
+function TransactionCard({ width, height, borderRadius, title, date, time, price, type, iconType, iconUrl = null, style }) {
   return (
     <View
       style={[
@@ -40,30 +28,33 @@ function TransactionCard({
         style,
       ]}
     >
-      {iconType === "rent" || iconType === "fastPay" ? (
+      {iconType === "rent" ? (
         <Image
-          style={{ width: wp("9%"), height: wp("10%"), left: wp("73.5%"), borderRadius: wp("6%") }}
-          source={{ uri: iconUrl }}
+          style={{ width: wp("10%"), height: hp("6%"), borderRadius: hp("3.5%"), position: "absolute", right: wp("3.5%") }}
+          source={{
+            uri: iconUrl,
+          }}
         />
       ) : iconType === "wallet" ? (
-        <AppIcon family="Ionicons" name="wallet-outline" size={wp("8%")} style={{ right: wp("4%") }} />
+        <AppIcon family="Ionicons" name="wallet-outline" color={colors.darkBlue} size={hp("4.5%")} style={{ right: wp("3.5%") }} />
+      ) : iconType === "fastPay" ? (
+        <Image
+          resizeMode="contain"
+          style={{ width: wp("14%"), height: hp("18%"), borderRadius: hp("1.5%"), position: "absolute", right: wp("1.2%") }}
+          source={require("../assets/images/logo.png")}
+        />
       ) : null}
 
-      <AppText text={title} size={wp("3%")} style={{ right: wp("15%"), bottom: wp("9%") }} />
-      <AppText
-        text={time + "  -  " + date}
-        size={wp("2.8%")}
-        color={colors.darkBlue}
-        style={{ right: wp("15%"), bottom: wp("4%") }}
-      />
-      <AppText text={price} size={wp("4%")} style={{ left: wp("15%") }} />
+      <AppText text={title} size={hp("1.55%")} style={{ right: wp("16%"), bottom: hp("5.5%") }} />
+      <AppText text={time + "  -  " + date} size={hp("1.5%")} color={colors.darkBlue} style={{ right: wp("16%"), bottom: hp("2%") }} />
+      <AppText text={price} size={hp("1.8%")} style={{ left: wp("14%") }} />
       {type === "plus" ? (
-        <AppIcon family="Feather" name="plus" size={wp("3%")} style={{ left: wp("11.5%"), bottom: wp("6.8%") }} />
+        <AppIcon family="Feather" name="plus" size={wp("3%")} style={{ left: wp("11%"), top: hp("4.5%") }} />
       ) : type === "minus" ? (
-        <AppIcon family="Feather" name="minus" size={wp("3.2%")} style={{ left: wp("11.5%"), bottom: wp("6.8%") }} />
+        <AppIcon family="Feather" name="minus" size={wp("3.2%")} style={{ left: wp("11%"), bottom: hp("3.7%") }} />
       ) : null}
 
-      <AppText text="تومان" size={wp("2.7%")} color={colors.darkBlue} style={{ left: wp("3.5%") }} />
+      <AppText text="تومان" size={hp("1.3%")} color={colors.darkBlue} style={{ left: wp("3.5%") }} />
     </View>
   );
 }
@@ -71,6 +62,7 @@ function TransactionCard({
 const styles = StyleSheet.create({
   card: {
     justifyContent: "center",
+    alignItems: "center",
     margin: wp("2%"),
   },
 });

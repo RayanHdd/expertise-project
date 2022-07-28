@@ -23,7 +23,7 @@ export const readDataAsync = (AsyncStorage, storage_key) => {
 export const saveData = async (AsyncStorage, storage_key, data) => {
   try {
     await AsyncStorage.setItem(storage_key, data);
-    alert("Data successfully saved");
+    console.log("Data successfully saved");
   } catch (e) {
     alert("Failed to save the data to the storage");
   }
