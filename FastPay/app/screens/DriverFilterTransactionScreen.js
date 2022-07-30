@@ -116,7 +116,7 @@ const DriverFilterTransactionScreen = ({ navigation }) => {
             marginRight: wp("6%"),
             position: "absolute",
           }}
-          submitTextStyle={{ fontFamily: "Dirooz", color: "white", fontSize: hp("2.7%") }}
+          submitTextStyle={{ fontFamily: "Dirooz", color: "white", fontSize: hp("2.4%") }}
           submitStyle={{
             position: "absolute",
             backgroundColor: colors.darkBlue,
@@ -139,55 +139,59 @@ const DriverFilterTransactionScreen = ({ navigation }) => {
       )}
 
       <View style={{ flexDirection: "row" }}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.goBack();
-          }}
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: wp("25%"),
-            height: hp("8%"),
-            top: hp("40%"),
-            left: wp("20%"),
-            borderRadius: hp("1%"),
-            backgroundColor: colors.secondary,
-            shadowColor: colors.darkBlue,
-            shadowOffset: {
-              width: 0,
-              height: 2,
-            },
-            elevation: 3,
-          }}
-        >
-          <AppButton width="30%" height="20%" color="secondary" borderRadius={hp("1%")} />
-          <AppText text="انصراف" size={hp("2.1%")} color={colors.darkBlue} />
-        </TouchableOpacity>
+        {!datePickerVisibility && !datePickerVisibility2 && (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.goBack();
+            }}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: wp("25%"),
+              height: hp("8%"),
+              top: hp("40%"),
+              left: wp("20%"),
+              borderRadius: hp("1%"),
+              backgroundColor: colors.secondary,
+              shadowColor: colors.darkBlue,
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              elevation: 3,
+            }}
+          >
+            <AppButton width="30%" height="20%" color="secondary" borderRadius={hp("1%")} />
+            <AppText text="انصراف" size={hp("2.1%")} color={colors.darkBlue} />
+          </TouchableOpacity>
+        )}
         <View style={{ flex: 1 }}></View>
 
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate("DriverTransactions", {
-              startDate: filterStartDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterStartDate.string),
-              endDate: filterEndDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterEndDate.string),
-            });
-          }}
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: wp("25%"),
-            height: hp("8%"),
-            top: hp("40%"),
-            borderRadius: hp("1%"),
-            backgroundColor: colors.primary,
-            shadowColor: colors.darkBlue,
-            elevation: 3,
-            right: wp("20%"),
-          }}
-        >
-          <AppButton width="30%" height="20%" borderRadius={hp("1%")} />
-          <AppText text="تایید" size={hp("2.2%")} color={colors.darkBlue} />
-        </TouchableOpacity>
+        {!datePickerVisibility && !datePickerVisibility2 && (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("DriverTransactions", {
+                startDate: filterStartDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterStartDate.string),
+                endDate: filterEndDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterEndDate.string),
+              });
+            }}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: wp("25%"),
+              height: hp("8%"),
+              top: hp("40%"),
+              borderRadius: hp("1%"),
+              backgroundColor: colors.primary,
+              shadowColor: colors.darkBlue,
+              elevation: 3,
+              right: wp("20%"),
+            }}
+          >
+            <AppButton width="30%" height="20%" borderRadius={hp("1%")} />
+            <AppText text="تایید" size={hp("2.2%")} color={colors.darkBlue} />
+          </TouchableOpacity>
+        )}
       </View>
     </>
   );

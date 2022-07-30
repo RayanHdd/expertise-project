@@ -370,7 +370,7 @@ const SignupScreen = ({ navigation }) => {
                 <Animated.View
                   style={{
                     position: "absolute",
-                    right: wp("44%"),
+                    right: hp("22%"),
                     bottom: hp("2.4%"),
                     transform: [
                       {

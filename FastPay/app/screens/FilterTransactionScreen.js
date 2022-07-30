@@ -117,7 +117,7 @@ const FilterTransactionScreen = ({ navigation }) => {
             marginRight: wp("6%"),
             position: "absolute",
           }}
-          submitTextStyle={{ fontFamily: "Dirooz", color: "white", fontSize: hp("2.7%") }}
+          submitTextStyle={{ fontFamily: "Dirooz", color: "white", fontSize: hp("2.4%") }}
           submitStyle={{
             position: "absolute",
             backgroundColor: colors.darkBlue,
@@ -176,7 +176,7 @@ const FilterTransactionScreen = ({ navigation }) => {
           setSelectedType("fastPay");
         }}
       >
-        <View style={{ top: hp("40%"), justifyContent: "center", position: "absolute", alignSelf: "center", right: wp("18%"), opacity: selectedType === "app" ? 1 : 0.3 }}>
+        <View style={{ top: hp("40%"), justifyContent: "center", position: "absolute", alignSelf: "center", right: wp("18%"), opacity: selectedType === "fastPay" ? 1 : 0.3 }}>
           <AppButton width={hp("8%")} color="light" height={hp("8%")} borderRadius={hp("2.4%")} style={{ borderWidth: hp("0.3%"), borderColor: colors.darkBlue }} />
           <Image
             source={require("../assets/images/logo.png")}
@@ -193,56 +193,60 @@ const FilterTransactionScreen = ({ navigation }) => {
       </TouchableWithoutFeedback>
 
       <View style={{ flexDirection: "row" }}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.goBack();
-          }}
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: wp("25%"),
-            height: hp("8%"),
-            top: hp("50%"),
-            left: wp("20%"),
-            borderRadius: hp("1%"),
-            backgroundColor: colors.secondary,
-            shadowColor: colors.darkBlue,
-            shadowOffset: {
-              width: 0,
-              height: 2,
-            },
-            elevation: 3,
-          }}
-        >
-          <AppButton width="30%" height="20%" color="secondary" borderRadius={hp("1%")} />
-          <AppText text="انصراف" size={hp("2.1%")} color={colors.darkBlue} />
-        </TouchableOpacity>
+        {!datePickerVisibility && !datePickerVisibility2 && (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.goBack();
+            }}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: wp("25%"),
+              height: hp("8%"),
+              top: hp("50%"),
+              left: wp("20%"),
+              borderRadius: hp("1%"),
+              backgroundColor: colors.secondary,
+              shadowColor: colors.darkBlue,
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              elevation: 3,
+            }}
+          >
+            <AppButton width="30%" height="20%" color="secondary" borderRadius={hp("1%")} />
+            <AppText text="انصراف" size={hp("2.1%")} color={colors.darkBlue} />
+          </TouchableOpacity>
+        )}
         <View style={{ flex: 1 }}></View>
 
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate("Transactions", {
-              startDate: filterStartDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterStartDate.string),
-              endDate: filterEndDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterEndDate.string),
-              type: selectedType,
-            });
-          }}
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: wp("25%"),
-            height: hp("8%"),
-            top: hp("50%"),
-            borderRadius: hp("1%"),
-            backgroundColor: colors.primary,
-            shadowColor: colors.darkBlue,
-            elevation: 3,
-            right: wp("20%"),
-          }}
-        >
-          <AppButton width="30%" height="20%" borderRadius={hp("1%")} />
-          <AppText text="تایید" size={hp("2.2%")} color={colors.darkBlue} />
-        </TouchableOpacity>
+        {!datePickerVisibility && !datePickerVisibility2 && (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate("Transactions", {
+                startDate: filterStartDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterStartDate.string),
+                endDate: filterEndDate.string === "" && todayDate !== null ? toFarsiDigits(`${todayDate[0]}/${todayDate[1]}/${todayDate[2]}`) : toFarsiDigits(filterEndDate.string),
+                type: selectedType,
+              });
+            }}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              width: wp("25%"),
+              height: hp("8%"),
+              top: hp("50%"),
+              borderRadius: hp("1%"),
+              backgroundColor: colors.primary,
+              shadowColor: colors.darkBlue,
+              elevation: 3,
+              right: wp("20%"),
+            }}
+          >
+            <AppButton width="30%" height="20%" borderRadius={hp("1%")} />
+            <AppText text="تایید" size={hp("2.2%")} color={colors.darkBlue} />
+          </TouchableOpacity>
+        )}
       </View>
     </>
   );
