@@ -1,7 +1,7 @@
 # expertise-project
 my expertise project in shiraz university - a taxi pay app
 
-![1](https://github.com/RayanHdd/expertise-project/assets/68460959/f8fea447-42f0-4a3b-a086-7849e5692098)
+![1](https://github.com/RayanHdd/expertise-project/assets/68460959/e053911a-b2ae-4245-a6f9-f50dff51d137)
 
 ![2](https://github.com/RayanHdd/expertise-project/assets/68460959/6419066f-4288-4745-8b2d-58f0b47f4fe1)
 
